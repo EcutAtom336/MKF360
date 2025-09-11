@@ -1,0 +1,5 @@
+load STM32H750VBTx
+project name STM32CubeMX
+project toolchain "MDK-ARM V5"
+project path "D:\Users\zhujiatao\my_project\MKF360\embed\MKF360\STM32CubeMX\Target_1"
+SetCopyLibrary "copy only"

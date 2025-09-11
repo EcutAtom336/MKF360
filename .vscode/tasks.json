@@ -1,0 +1,22 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Format user files",
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}",
+            },
+            "command": "python script/batch_format.py --clang-format-exe clang-format.exe",
+            "problemMatcher": []
+        },
+        {
+            "label": "Generate compile_commands.json",
+            "type": "shell",
+            "command": "MDK_parser.exe --mdk-path C:/Users/ZhuJiatao/AppData/Local/Keil_v5 --project-path ${workspaceFolder} --project-name MKF360 --target-name Target_1",
+            "problemMatcher": []
+        }
+    ]
+}

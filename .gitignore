@@ -1,0 +1,12 @@
+# Cache files
+.Cache
+
+# Keil MDK middle files
+Listings
+Objects
+
+# compile database
+compile_commands.json
+
+# Clangd
+.clangd

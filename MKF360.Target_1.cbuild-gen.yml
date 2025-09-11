@@ -1,0 +1,100 @@
+build-gen:
+  board: 
+  compiler: AC6
+  device: STM32H750VBTx
+  generated-by: uVision version 5.42.0.0
+  processor:
+    core: Cortex-M7
+    dsp: off
+    endian: little
+    fpu: dp
+  add-path: 
+  components:
+    - component: ARM::CMSIS-Compiler:CORE@1.1.0
+      from-pack: ARM::CMSIS-Compiler@2.1.0
+      files:
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-Compiler/2.1.0/source/armcc/retarget_io.c
+          category: sourceC
+    - component: ARM::CMSIS-Compiler:STDOUT:Event Recorder@1.1.0
+      from-pack: ARM::CMSIS-Compiler@2.1.0
+      files:
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-Compiler/2.1.0/source/stdout_evr.c
+          category: sourceC
+    - component: ARM::CMSIS-View:Event Recorder&DAP@1.6.0
+      from-pack: ARM::CMSIS-View@1.2.0
+      files:
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-View/1.2.0/EventRecorder/Source/EventRecorder.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/RTE/CMSIS-View/EventRecorderConf.h
+          category: header
+    - component: ARM::CMSIS:CORE@6.1.0
+      from-pack: ARM::CMSIS@6.1.0
+    - component: ARM::CMSIS:DSP&Source@1.16.2
+      from-pack: ARM::CMSIS-DSP@1.16.2
+      files:
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/BasicMathFunctions/BasicMathFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/BasicMathFunctions/BasicMathFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/BayesFunctions/BayesFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/BayesFunctions/BayesFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/CommonTables/CommonTables.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/CommonTables/CommonTablesF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/ComplexMathFunctions/ComplexMathFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/ComplexMathFunctions/ComplexMathFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/ControllerFunctions/ControllerFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/DistanceFunctions/DistanceFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/DistanceFunctions/DistanceFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/FastMathFunctions/FastMathFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/FastMathFunctions/FastMathFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/FilteringFunctions/FilteringFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/FilteringFunctions/FilteringFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/InterpolationFunctions/InterpolationFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/InterpolationFunctions/InterpolationFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/MatrixFunctions/MatrixFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/MatrixFunctions/MatrixFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/QuaternionMathFunctions/QuaternionMathFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/SVMFunctions/SVMFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/SVMFunctions/SVMFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/StatisticsFunctions/StatisticsFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/StatisticsFunctions/StatisticsFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/SupportFunctions/SupportFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/SupportFunctions/SupportFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/TransformFunctions/TransformFunctions.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/TransformFunctions/TransformFunctionsF16.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-DSP/1.16.2/Source/WindowFunctions/WindowFunctions.c
+          category: sourceC
+    - component: Keil::Device:CubeMX@1.0.0
+      from-pack: Keil::STM32H7xx_DFP@4.0.0
+  apis:
+    - api: CMSIS-Compiler:STDOUT(API)@1.1.0
+      from-pack: ARM::CMSIS-Compiler@2.1.0
+  groups:
+    - group: Source Group 1
+      files: 
