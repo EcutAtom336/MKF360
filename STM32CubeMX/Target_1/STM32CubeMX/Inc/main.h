@@ -53,11 +53,23 @@ extern "C"
     /* Exported functions prototypes ---------------------------------------------*/
     void Error_Handler(void);
 
-    /* USER CODE BEGIN EFP */
+/* USER CODE BEGIN EFP */
 
-    /* USER CODE END EFP */
+/* USER CODE END EFP */
 
-    /* Private defines -----------------------------------------------------------*/
+/* Private defines -----------------------------------------------------------*/
+#define LED4_Pin GPIO_PIN_2
+#define LED4_GPIO_Port GPIOD
+#define LED3_Pin GPIO_PIN_3
+#define LED3_GPIO_Port GPIOD
+#define BAT_LOW_LED_Pin GPIO_PIN_4
+#define BAT_LOW_LED_GPIO_Port GPIOD
+#define SYS_LED_Pin GPIO_PIN_5
+#define SYS_LED_GPIO_Port GPIOD
+#define LED2_Pin GPIO_PIN_6
+#define LED2_GPIO_Port GPIOD
+#define LED1_Pin GPIO_PIN_7
+#define LED1_GPIO_Port GPIOD
 
     /* USER CODE BEGIN Private defines */
 

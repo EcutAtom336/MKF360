@@ -422,6 +422,16 @@
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\quadspi.c</FilePath>
             </File>
+            <File>
+              <FileName>dfsdm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\dfsdm.c</FilePath>
+            </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\dma.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -526,6 +536,11 @@
               <FileName>stm32h7xx_ll_delayblock.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_ll_delayblock.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_dfsdm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dfsdm.c</FilePath>
             </File>
           </Files>
         </Group>

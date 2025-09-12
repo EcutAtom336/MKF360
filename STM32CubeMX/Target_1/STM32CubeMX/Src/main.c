@@ -18,21 +18,61 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dfsdm.h"
+#include "dma.h"
 #include "gpio.h"
 #include "quadspi.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "EventRecorder.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+typedef enum
+{
+    EventGroup1Mic1FirstHalfReady,
+    EventGroup1Mic1SecondHalfReady,
+    EventGroup1Mic2FirstHalfReady,
+    EventGroup1Mic2SecondHalfReady,
+    EventGroup1Mic3FirstHalfReady,
+    EventGroup1Mic3SecondHalfReady,
+    EventGroup1Mic4FirstHalfReady,
+    EventGroup1Mic4SecondHalfReady,
+
+    EventGroup1Max = 32,
+} EventGroup1Idx_t;
+
+#if EventGroup1Max >= 32
+#error "Event group 1 event too many!"
+#endif
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define AUDIO_FREQ (48000U)
+#define DFSDM_DMA_FRAME_SAMPLE_COUNT (AUDIO_FREQ / 1000U)
+
+#define MIC1_FH_RDY_BIT (1U << EventGroup1Mic1FirstHalfReady)
+#define MIC1_SH_RDY_BIT (1U << EventGroup1Mic1SecondHalfReady)
+#define MIC2_FH_RDY_BIT (1U << EventGroup1Mic2FirstHalfReady)
+#define MIC2_SH_RDY_BIT (1U << EventGroup1Mic2SecondHalfReady)
+#define MIC3_FH_RDY_BIT (1U << EventGroup1Mic3FirstHalfReady)
+#define MIC3_SH_RDY_BIT (1U << EventGroup1Mic3SecondHalfReady)
+#define MIC4_FH_RDY_BIT (1U << EventGroup1Mic4FirstHalfReady)
+#define MIC4_SH_RDY_BIT (1U << EventGroup1Mic4SecondHalfReady)
+
+#define MIC_FH_RDY_BIT (MIC1_FH_RDY_BIT | MIC2_FH_RDY_BIT | MIC3_FH_RDY_BIT | MIC4_FH_RDY_BIT)
+#define MIC_SH_RDY_BIT (MIC1_SH_RDY_BIT | MIC2_SH_RDY_BIT | MIC3_SH_RDY_BIT | MIC4_SH_RDY_BIT)
 
 /* USER CODE END PD */
 
@@ -44,6 +84,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+__attribute__((section("DTCM"))) static uint32_t event = 0;
+
+__attribute__((section("DMA_RAM_D2"))) static int16_t mic1_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section("DMA_RAM_D2"))) static int16_t mic2_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section("DMA_RAM_D2"))) static int16_t mic3_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section("DMA_RAM_D2"))) static int16_t mic4_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
 
 /* USER CODE END PV */
 
@@ -108,21 +155,110 @@ int main(void)
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
+    MX_DMA_Init();
     MX_QUADSPI_Init();
+    MX_DFSDM1_Init();
     /* USER CODE BEGIN 2 */
 
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
+    HAL_StatusTypeDef ret_hal = HAL_OK;
+    uint32_t ret_uint32 = 0;
+
+    ret_uint32 = EventRecorderInitialize(EventRecordAll, 1);
+    if (ret_uint32 != 1)
+    {
+        printf("EventRecorderInitialize fail, code: %u", ret_uint32);
+        abort();
+    }
+
+    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter0, mic1_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter0 start fail, code: %u", ret_hal);
+        abort();
+    }
+
+    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter1, mic2_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter1 start fail, code: %u", ret_hal);
+        abort();
+    }
+
+    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter2, mic3_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter2 start fail, code: %u", ret_hal);
+        abort();
+    }
+
+    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter3, mic4_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter3 start fail, code: %u", ret_hal);
+        abort();
+    }
+
+    uint32_t full_cnt[4] = {0};
+
     while (1)
     {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
 
-        HAL_Delay(500);
-        HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
+        if (event & MIC1_FH_RDY_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, MIC1_FH_RDY_BIT);
+        }
+        else if (event & MIC1_SH_RDY_BIT)
+        {
+            if (full_cnt[0]++ % 50 >= 49)
+            {
+                __ASM("SVC 0");
+            }
+            ATOMIC_CLEAR_BIT(event, MIC1_SH_RDY_BIT);
+        }
+        else if (event & MIC2_FH_RDY_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, MIC2_FH_RDY_BIT);
+        }
+        else if (event & MIC2_SH_RDY_BIT)
+        {
+            if (full_cnt[1]++ % 50 >= 49)
+            {
+                __ASM("SVC 1");
+            }
+            ATOMIC_CLEAR_BIT(event, MIC2_SH_RDY_BIT);
+        }
+        else if (event & MIC3_FH_RDY_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, MIC3_FH_RDY_BIT);
+        }
+        else if (event & MIC3_SH_RDY_BIT)
+        {
+            if (full_cnt[2]++ % 50 >= 49)
+            {
+                __ASM("SVC 2");
+            }
+            ATOMIC_CLEAR_BIT(event, MIC3_SH_RDY_BIT);
+        }
+        else if (event & MIC4_FH_RDY_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, MIC4_FH_RDY_BIT);
+        }
+        else if (event & MIC4_SH_RDY_BIT)
+        {
+            if (full_cnt[3]++ % 50 >= 49)
+            {
+                __ASM("SVC 3");
+            }
+            ATOMIC_CLEAR_BIT(event, MIC4_SH_RDY_BIT);
+        }
     }
     /* USER CODE END 3 */
 }
@@ -187,6 +323,72 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void mkf360_svc_handler(uint32_t *stacked)
+{
+    uint16_t *pc_ptr = (uint16_t *)(stacked[6] - 2);
+    uint8_t svc_number = (uint8_t)(*pc_ptr & 0xFF);
+
+    switch (svc_number)
+    {
+    case 0: {
+        HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+        break;
+    }
+    case 1: {
+        HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+        break;
+    }
+    case 2: {
+        HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
+        break;
+    }
+    case 3: {
+        HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
+        break;
+    }
+    }
+}
+
+void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+{
+    if (hdfsdm_filter == &hdfsdm1_filter0)
+    {
+        ATOMIC_SET_BIT(event, MIC1_FH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter1)
+    {
+        ATOMIC_SET_BIT(event, MIC2_FH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter2)
+    {
+        ATOMIC_SET_BIT(event, MIC3_FH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter3)
+    {
+        ATOMIC_SET_BIT(event, MIC4_FH_RDY_BIT);
+    }
+}
+
+void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+{
+    if (hdfsdm_filter == &hdfsdm1_filter0)
+    {
+        ATOMIC_SET_BIT(event, MIC1_SH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter1)
+    {
+        ATOMIC_SET_BIT(event, MIC2_SH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter2)
+    {
+        ATOMIC_SET_BIT(event, MIC3_SH_RDY_BIT);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter3)
+    {
+        ATOMIC_SET_BIT(event, MIC4_SH_RDY_BIT);
+    }
+}
 
 /* USER CODE END 4 */
 

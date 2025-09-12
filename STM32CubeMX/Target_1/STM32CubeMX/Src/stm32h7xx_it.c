@@ -22,6 +22,9 @@
 #include "main.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include <stdlib.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +58,10 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern DMA_HandleTypeDef hdma_dfsdm1_flt0;
+extern DMA_HandleTypeDef hdma_dfsdm1_flt1;
+extern DMA_HandleTypeDef hdma_dfsdm1_flt2;
+extern DMA_HandleTypeDef hdma_dfsdm1_flt3;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -145,6 +151,12 @@ void SVC_Handler(void)
 {
     /* USER CODE BEGIN SVCall_IRQn 0 */
 
+    __asm volatile("TST lr, #4\n"
+                   "ITE EQ\n"
+                   "MRSEQ r0, MSP\n"
+                   "MRSNE r0, PSP\n"
+                   "B mkf360_svc_handler\n");
+
     /* USER CODE END SVCall_IRQn 0 */
     /* USER CODE BEGIN SVCall_IRQn 1 */
 
@@ -197,6 +209,62 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32h7xx.s).                    */
 /******************************************************************************/
+
+/**
+ * @brief This function handles DMA1 stream0 global interrupt.
+ */
+void DMA1_Stream0_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream0_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream0_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_dfsdm1_flt0);
+    /* USER CODE BEGIN DMA1_Stream0_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream0_IRQn 1 */
+}
+
+/**
+ * @brief This function handles DMA1 stream1 global interrupt.
+ */
+void DMA1_Stream1_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream1_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream1_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_dfsdm1_flt1);
+    /* USER CODE BEGIN DMA1_Stream1_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream1_IRQn 1 */
+}
+
+/**
+ * @brief This function handles DMA1 stream2 global interrupt.
+ */
+void DMA1_Stream2_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream2_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream2_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_dfsdm1_flt2);
+    /* USER CODE BEGIN DMA1_Stream2_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream2_IRQn 1 */
+}
+
+/**
+ * @brief This function handles DMA1 stream3 global interrupt.
+ */
+void DMA1_Stream3_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream3_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_dfsdm1_flt3);
+    /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream3_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 
