@@ -22,6 +22,7 @@
 #include "dma.h"
 #include "gpio.h"
 #include "quadspi.h"
+#include "usb_otg.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -120,14 +121,6 @@ int main(void)
     /* MPU Configuration--------------------------------------------------------*/
     MPU_Config();
 
-    /* Enable the CPU Cache */
-
-    /* Enable I-Cache---------------------------------------------------------*/
-    SCB_EnableICache();
-
-    /* Enable D-Cache---------------------------------------------------------*/
-    SCB_EnableDCache();
-
     /* MCU Configuration--------------------------------------------------------*/
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -158,6 +151,7 @@ int main(void)
     MX_DMA_Init();
     MX_QUADSPI_Init();
     MX_DFSDM1_Init();
+    MX_USB_OTG_FS_PCD_Init();
     /* USER CODE BEGIN 2 */
 
     /* USER CODE END 2 */
@@ -409,8 +403,8 @@ void MPU_Config(void)
     MPU_InitStruct.Size = MPU_REGION_SIZE_4GB;
     MPU_InitStruct.SubRegionDisable = 0x87;
     MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-    MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-    MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+    MPU_InitStruct.AccessPermission = MPU_REGION_NO_ACCESS;
+    MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
     MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
     MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
     MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
