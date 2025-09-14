@@ -8,7 +8,13 @@ build-gen:
     dsp: off
     endian: little
     fpu: dp
-  add-path: 
+  add-path:
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/core
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/common
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/audio
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/cdc
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/include
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
@@ -27,8 +33,8 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/RTE/CMSIS-View/EventRecorderConf.h
           category: header
-    - component: ARM::CMSIS:CORE@6.1.0
-      from-pack: ARM::CMSIS@6.1.0
+    - component: ARM::CMSIS:CORE@6.1.1
+      from-pack: ARM::CMSIS@6.2.0
     - component: ARM::CMSIS:DSP&Source@1.16.2
       from-pack: ARM::CMSIS-DSP@1.16.2
       files:
@@ -96,5 +102,19 @@ build-gen:
     - api: CMSIS-Compiler:STDOUT(API)@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
   groups:
-    - group: Source Group 1
-      files: 
+    - group: User
+      files:
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/usb_port.c
+          category: sourceC
+    - group: CherryUSB
+      files:
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/core/usbd_core.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/audio/usbd_audio.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/cdc/usbd_cdc_acm.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2/usb_glue_st.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2/usb_dc_dwc2.c
+          category: sourceC

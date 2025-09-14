@@ -43,6 +43,7 @@ LR_IROM1 0x08000000 0x20000 {
   }
   RW_SRAM3 0x30040000 0x8000 {
     .ANY (.DMA_RAM_D2)
+    .ANY (.noncacheable)
   }
   RW_SRAM4 0x38000000 0x10000 {
     .ANY (.BDMA_RAM_D3)
