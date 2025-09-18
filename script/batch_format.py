@@ -13,6 +13,8 @@ from pathlib import Path
 TARGET_DIRS = [
     Path("STM32CubeMX/Target_1/STM32CubeMX/Src"),
     Path("STM32CubeMX/Target_1/STM32CubeMX/Inc"),
+    Path("audio/src"),
+    Path("audio/include/audio"),
     # 可以添加更多目录...
 ]
 CONFIG_NAME = ".clang-format"  # 配置文件名

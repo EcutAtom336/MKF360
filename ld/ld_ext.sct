@@ -68,6 +68,12 @@ LR_ROM2 0x90000000 0x1000000 {
     mdma.o (+RO)
     memorymap.o (+RO)
     usart.o (+RO)
+
+    ; resource
+    BATTERY_LOW_PCM.o (+RO)
+    BLUETOOTH_CONNECT_PCM.o (+RO)
+    BLUETOOTH_DISCONNECT_PCM.o (+RO)
+    BOOT_PCM.o (+RO)
   }
   ER_ITCM 0x00000000 0x10000 {
     .ANY (.ITCM)

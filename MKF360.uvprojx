@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include</IncludePath>
+              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include;.\audio\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -613,6 +613,31 @@
               <FileName>usb_dc_dwc2.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\lib\CherryUSB-1.5.2\port\dwc2\usb_dc_dwc2.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>audio</GroupName>
+          <Files>
+            <File>
+              <FileName>BATTERY_LOW_PCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\BATTERY_LOW_PCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>BLUETOOTH_CONNECT_PCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\BLUETOOTH_CONNECT_PCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>BLUETOOTH_DISCONNECT_PCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\BLUETOOTH_DISCONNECT_PCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>BOOT_PCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\BOOT_PCM.c</FilePath>
             </File>
           </Files>
         </Group>
