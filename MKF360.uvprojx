@@ -389,6 +389,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\usb_desc.c</FilePath>
             </File>
+            <File>
+              <FileName>retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\retarget.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -438,6 +443,11 @@
               <FileName>dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\usart.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -564,6 +574,16 @@
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_ll_usb.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32h7xx_hal_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_uart_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_uart_ex.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -603,9 +623,6 @@
           <GroupName>::CMSIS-Compiler</GroupName>
         </Group>
         <Group>
-          <GroupName>::CMSIS-View</GroupName>
-        </Group>
-        <Group>
           <GroupName>::Device</GroupName>
         </Group>
       </Groups>
@@ -635,14 +652,8 @@
           <targetInfo name="Target_1"/>
         </targetInfos>
       </component>
-      <component Capiversion="1.1.0" Cclass="CMSIS-Compiler" Cgroup="STDOUT" Csub="Event Recorder" Cvendor="ARM" Cversion="1.1.0" condition="CORE EVR">
+      <component Capiversion="1.1.0" Cclass="CMSIS-Compiler" Cgroup="STDOUT" Csub="Custom" Cvendor="ARM" Cversion="1.1.0" condition="CORE" custom="1">
         <package name="CMSIS-Compiler" schemaVersion="1.7.36" url="https://www.keil.com/pack/" vendor="ARM" version="2.1.0"/>
-        <targetInfos>
-          <targetInfo name="Target_1"/>
-        </targetInfos>
-      </component>
-      <component Cclass="CMSIS-View" Cgroup="Event Recorder" Cvariant="DAP" Cvendor="ARM" Cversion="1.6.0" condition="EventRecorder">
-        <package name="CMSIS-View" schemaVersion="1.7.36" url="https://www.keil.com/pack/" vendor="ARM" version="1.2.0"/>
         <targetInfos>
           <targetInfo name="Target_1"/>
         </targetInfos>
@@ -668,12 +679,10 @@
     </components>
     <files>
       <file attr="config" category="header" name="EventRecorder\Config\EventRecorderConf.h" version="1.1.0">
-        <instance index="0">RTE\CMSIS-View\EventRecorderConf.h</instance>
+        <instance index="0" removed="1">RTE\CMSIS-View\EventRecorderConf.h</instance>
         <component Cclass="CMSIS-View" Cgroup="Event Recorder" Cvariant="DAP" Cvendor="ARM" Cversion="1.6.0" condition="EventRecorder"/>
         <package name="CMSIS-View" schemaVersion="1.7.36" url="https://www.keil.com/pack/" vendor="ARM" version="1.2.0"/>
-        <targetInfos>
-          <targetInfo name="Target_1"/>
-        </targetInfos>
+        <targetInfos/>
       </file>
     </files>
   </RTE>

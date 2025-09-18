@@ -22,14 +22,15 @@
 #include "dma.h"
 #include "gpio.h"
 #include "quadspi.h"
+#include "usart.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "EventRecorder.h"
 #include "usbd_core.h"
 
 #include "User/usb_desc.h"
@@ -163,6 +164,7 @@ int main(void)
     MX_DMA_Init();
     MX_QUADSPI_Init();
     MX_DFSDM1_Init();
+    MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
 
     /* USER CODE END 2 */
@@ -174,13 +176,6 @@ int main(void)
     uint32_t ret_uint32 = 0;
 
     cdc_acm_init(0, USB_OTG_FS_PERIPH_BASE);
-
-    ret_uint32 = EventRecorderInitialize(EventRecordAll, 1);
-    if (ret_uint32 != 1)
-    {
-        printf("EventRecorderInitialize fail, code: %u", ret_uint32);
-        abort();
-    }
 
     ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter0, mic1_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
     if (ret_hal != HAL_OK)

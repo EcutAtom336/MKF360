@@ -15,24 +15,15 @@ build-gen:
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/audio
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/cdc
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/include
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/include
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
       files:
         - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-Compiler/2.1.0/source/armcc/retarget_io.c
           category: sourceC
-    - component: ARM::CMSIS-Compiler:STDOUT:Event Recorder@1.1.0
+    - component: ARM::CMSIS-Compiler:STDOUT:Custom@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
-      files:
-        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-Compiler/2.1.0/source/stdout_evr.c
-          category: sourceC
-    - component: ARM::CMSIS-View:Event Recorder&DAP@1.6.0
-      from-pack: ARM::CMSIS-View@1.2.0
-      files:
-        - file: D:/Users/zhujiatao/my_doc/keil_pack/ARM/CMSIS-View/1.2.0/EventRecorder/Source/EventRecorder.c
-          category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/RTE/CMSIS-View/EventRecorderConf.h
-          category: header
     - component: ARM::CMSIS:CORE@6.1.1
       from-pack: ARM::CMSIS@6.2.0
     - component: ARM::CMSIS:DSP&Source@1.16.2
@@ -104,7 +95,9 @@ build-gen:
   groups:
     - group: User
       files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/usb_port.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/usb_desc.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/retarget.c
           category: sourceC
     - group: CherryUSB
       files:
@@ -117,4 +110,10 @@ build-gen:
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2/usb_glue_st.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2/usb_dc_dwc2.c
+          category: sourceC
+    - group: LwRB
+      files:
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb_ex.c
           category: sourceC
