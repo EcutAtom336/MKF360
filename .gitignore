@@ -1,6 +1,9 @@
 # Cache files
 .Cache
 
+# Keil MDK .uvoptx file
+*.uvoptx
+
 # Keil MDK middle files
 Listings
 Objects
