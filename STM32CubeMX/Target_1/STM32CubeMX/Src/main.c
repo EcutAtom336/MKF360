@@ -327,7 +327,7 @@ static void mic_start()
         if (ret_hal != HAL_OK)
         {
             printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);
-            abort();
+            Error_Handler();
         }
     }
 }
@@ -348,7 +348,7 @@ static void mic_stop()
         if (ret_hal != HAL_OK)
         {
             printf("hdfsdm1 filter%u stop fail, code: %u", i, ret_hal);
-            abort();
+            Error_Handler();
         }
     }
 }
@@ -606,6 +606,7 @@ void MPU_Config(void)
 void Error_Handler(void)
 {
     /* USER CODE BEGIN Error_Handler_Debug */
+    HAL_UART_Transmit(&huart1, (uint8_t *)"Error!", sizeof("Error!"), 1000);
     /* User can add his own implementation to report the HAL error return state */
     __disable_irq();
     while (1)
