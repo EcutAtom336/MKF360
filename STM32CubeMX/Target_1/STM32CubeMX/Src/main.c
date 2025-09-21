@@ -175,7 +175,7 @@ int main(void)
     HAL_StatusTypeDef ret_hal = HAL_OK;
     uint32_t ret_uint32 = 0;
 
-    cdc_acm_init(0, USB_OTG_FS_PERIPH_BASE);
+    usb_init(0, USB_OTG_FS_PERIPH_BASE);
 
     ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter0, mic1_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
     if (ret_hal != HAL_OK)
@@ -385,7 +385,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *pcdHandle)
         PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
         {
-            // Error_Handler();
+            Error_Handler();
         }
 
         /** Enable USB Voltage detector
@@ -400,7 +400,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *pcdHandle)
         GPIO_InitStruct.Pin = GPIO_PIN_11 | GPIO_PIN_12;
         GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
         GPIO_InitStruct.Alternate = GPIO_AF10_OTG1_FS;
         HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -408,7 +408,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *pcdHandle)
         __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
 
         /* USB_OTG_FS interrupt Init */
-        HAL_NVIC_SetPriority(OTG_FS_IRQn, 0, 0);
+        HAL_NVIC_SetPriority(OTG_FS_IRQn, 1, 0);
         HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
         /* USER CODE BEGIN USB_OTG_FS_MspInit 1 */
 

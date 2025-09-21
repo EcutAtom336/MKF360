@@ -15,7 +15,7 @@ build-gen:
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/audio
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/cdc
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/include
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/include
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/include
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
@@ -111,9 +111,13 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/port/dwc2/usb_dc_dwc2.c
           category: sourceC
-    - group: LwRB
+    - group: audio
       files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BATTERY_LOW_PCM.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb_ex.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BLUETOOTH_CONNECT_PCM.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BLUETOOTH_DISCONNECT_PCM.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BOOT_PCM.c
           category: sourceC
