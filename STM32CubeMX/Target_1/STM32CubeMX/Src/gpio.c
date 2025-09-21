@@ -54,6 +54,12 @@ void MX_GPIO_Init(void)
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOD, LED4_Pin | LED3_Pin | BAT_LOW_LED_Pin | SYS_LED_Pin | LED2_Pin | LED1_Pin, GPIO_PIN_RESET);
 
+    /*Configure GPIO pin : VBUS_DETECT_Pin */
+    GPIO_InitStruct.Pin = VBUS_DETECT_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(VBUS_DETECT_GPIO_Port, &GPIO_InitStruct);
+
     /*Configure GPIO pins : LED4_Pin LED3_Pin BAT_LOW_LED_Pin SYS_LED_Pin
                              LED2_Pin LED1_Pin */
     GPIO_InitStruct.Pin = LED4_Pin | LED3_Pin | BAT_LOW_LED_Pin | SYS_LED_Pin | LED2_Pin | LED1_Pin;
@@ -61,6 +67,10 @@ void MX_GPIO_Init(void)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+    /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 /* USER CODE BEGIN 2 */

@@ -6,6 +6,7 @@
 #include "usbd_cdc_acm.h"
 
 #include "audio/PCM_RES.h"
+#include "main.h"
 
 #ifndef CONFIG_USBDEV_ADVANCE_DESC
 #error "Please enable CONFIG_USBDEV_ADVANCE_DESC macro."
@@ -229,6 +230,7 @@ volatile uint32_t s_speaker_sample_rate;
 void usbd_event_handler(uint8_t busid, uint8_t event)
 {
     (void)busid;
+    printf("%u\n", event);
     switch (event)
     {
     case USBD_EVENT_RESET:
@@ -244,6 +246,7 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
     case USBD_EVENT_SUSPEND:
         break;
     case USBD_EVENT_CONFIGURED:
+        on_uac_connect();
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;

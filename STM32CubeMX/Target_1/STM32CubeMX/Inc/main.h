@@ -56,10 +56,15 @@ extern "C"
     /* USER CODE BEGIN EFP */
 
     void period_event_generator();
+    void on_uac_connect();
+    void on_disconnect();
 
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define VBUS_DETECT_Pin GPIO_PIN_9
+#define VBUS_DETECT_GPIO_Port GPIOA
+#define VBUS_DETECT_EXTI_IRQn EXTI9_5_IRQn
 #define LED4_Pin GPIO_PIN_2
 #define LED4_GPIO_Port GPIOD
 #define LED3_Pin GPIO_PIN_3

@@ -51,8 +51,17 @@ typedef enum
     EventGroup1Mic4FirstHalfReady,
     EventGroup1Mic4SecondHalfReady,
 
+    EventGroup1UacConnect,
+    EventGroup1Disconnect,
+
     EventGroup1Tick500Pass,
 } EventGroup1Idx_t;
+
+typedef enum
+{
+    None,
+    Usb,
+} InterfaceType_t;
 
 /* USER CODE END PTD */
 
@@ -60,7 +69,7 @@ typedef enum
 /* USER CODE BEGIN PD */
 
 #define AUDIO_FREQ (48000U)
-#define DFSDM_DMA_FRAME_SAMPLE_COUNT (AUDIO_FREQ / 1000U)
+#define DFSDM_DMA_FRAME_SAMPLE_COUNT (AUDIO_FREQ / 50U)
 
 #define MIC1_FH_RDY_BIT (1U << EventGroup1Mic1FirstHalfReady)
 #define MIC1_SH_RDY_BIT (1U << EventGroup1Mic1SecondHalfReady)
@@ -70,6 +79,8 @@ typedef enum
 #define MIC3_SH_RDY_BIT (1U << EventGroup1Mic3SecondHalfReady)
 #define MIC4_FH_RDY_BIT (1U << EventGroup1Mic4FirstHalfReady)
 #define MIC4_SH_RDY_BIT (1U << EventGroup1Mic4SecondHalfReady)
+#define UAC_CONNECT_BIT (1U << EventGroup1UacConnect)
+#define DISCONNECT_BIT (1U << EventGroup1Disconnect)
 #define TICK_500_BIT (1U << EventGroup1Tick500Pass)
 
 #define MIC_FH_RDY_BIT (MIC1_FH_RDY_BIT | MIC2_FH_RDY_BIT | MIC3_FH_RDY_BIT | MIC4_FH_RDY_BIT)
@@ -88,12 +99,11 @@ typedef enum
 
 /* USER CODE BEGIN PV */
 
+__attribute__((section(".DTCM"))) static InterfaceType_t current_interface = None;
+
 __attribute__((section(".DTCM"))) static uint32_t event = 0;
 
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic1_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic2_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic3_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic4_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section(".DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
 
 /* USER CODE END PV */
 
@@ -101,6 +111,9 @@ __attribute__((section(".DMA_RAM_D2"))) static int16_t mic4_data[2][DFSDM_DMA_FR
 void SystemClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
+
+static void common_connect();
+static void common_disconnect();
 
 /* USER CODE END PFP */
 
@@ -169,40 +182,7 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    HAL_StatusTypeDef ret_hal = HAL_OK;
-    uint32_t ret_uint32 = 0;
-
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
-
-    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter0, mic1_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
-    if (ret_hal != HAL_OK)
-    {
-        printf("hdfsdm1 filter0 start fail, code: %u", ret_hal);
-        abort();
-    }
-
-    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter1, mic2_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
-    if (ret_hal != HAL_OK)
-    {
-        printf("hdfsdm1 filter1 start fail, code: %u", ret_hal);
-        abort();
-    }
-
-    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter2, mic3_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
-    if (ret_hal != HAL_OK)
-    {
-        printf("hdfsdm1 filter2 start fail, code: %u", ret_hal);
-        abort();
-    }
-
-    ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter3, mic4_data[0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
-    if (ret_hal != HAL_OK)
-    {
-        printf("hdfsdm1 filter3 start fail, code: %u", ret_hal);
-        abort();
-    }
-
-    uint32_t full_cnt[4] = {0};
 
     while (1)
     {
@@ -216,10 +196,7 @@ int main(void)
         }
         else if (event & MIC1_SH_RDY_BIT)
         {
-            if (full_cnt[0]++ % 50 >= 49)
-            {
-                __ASM("SVC 0");
-            }
+            __ASM("SVC 0");
             ATOMIC_CLEAR_BIT(event, MIC1_SH_RDY_BIT);
         }
         else if (event & MIC2_FH_RDY_BIT)
@@ -228,10 +205,7 @@ int main(void)
         }
         else if (event & MIC2_SH_RDY_BIT)
         {
-            if (full_cnt[1]++ % 50 >= 49)
-            {
-                __ASM("SVC 1");
-            }
+            __ASM("SVC 1");
             ATOMIC_CLEAR_BIT(event, MIC2_SH_RDY_BIT);
         }
         else if (event & MIC3_FH_RDY_BIT)
@@ -240,10 +214,7 @@ int main(void)
         }
         else if (event & MIC3_SH_RDY_BIT)
         {
-            if (full_cnt[2]++ % 50 >= 49)
-            {
-                __ASM("SVC 2");
-            }
+            __ASM("SVC 2");
             ATOMIC_CLEAR_BIT(event, MIC3_SH_RDY_BIT);
         }
         else if (event & MIC4_FH_RDY_BIT)
@@ -252,11 +223,22 @@ int main(void)
         }
         else if (event & MIC4_SH_RDY_BIT)
         {
-            if (full_cnt[3]++ % 50 >= 49)
-            {
-                __ASM("SVC 3");
-            }
+            __ASM("SVC 3");
             ATOMIC_CLEAR_BIT(event, MIC4_SH_RDY_BIT);
+        }
+        else if (event & UAC_CONNECT_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, UAC_CONNECT_BIT);
+            common_connect();
+            current_interface = Usb;
+            printf("USB connect.\n");
+        }
+        else if (event & DISCONNECT_BIT)
+        {
+            ATOMIC_CLEAR_BIT(event, DISCONNECT_BIT);
+            common_disconnect();
+            current_interface = None;
+            printf("USB disconnect.\n");
         }
         else if (event & TICK_500_BIT)
         {
@@ -327,6 +309,72 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+static void mic_start()
+{
+    HAL_StatusTypeDef ret_hal = HAL_OK;
+    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
+        &hdfsdm1_filter0,
+        &hdfsdm1_filter1,
+        &hdfsdm1_filter2,
+        &hdfsdm1_filter3,
+    };
+
+    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
+    {
+        ret_hal =
+            HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], mic_data[i][0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
+        if (ret_hal != HAL_OK)
+        {
+            printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);
+            abort();
+        }
+    }
+}
+
+static void mic_stop()
+{
+    HAL_StatusTypeDef ret_hal = HAL_OK;
+    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
+        &hdfsdm1_filter0,
+        &hdfsdm1_filter1,
+        &hdfsdm1_filter2,
+        &hdfsdm1_filter3,
+    };
+
+    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
+    {
+        ret_hal = HAL_DFSDM_FilterRegularStop_DMA(dfsdm_filters[i]);
+        if (ret_hal != HAL_OK)
+        {
+            printf("hdfsdm1 filter%u stop fail, code: %u", i, ret_hal);
+            abort();
+        }
+    }
+}
+
+static void common_connect()
+{
+    mic_start();
+}
+
+static void common_disconnect()
+{
+    mic_stop();
+}
+
+void on_uac_connect()
+{
+    ATOMIC_SET_BIT(event, UAC_CONNECT_BIT);
+}
+
+void on_disconnect()
+{
+    if (current_interface == Usb)
+    {
+        ATOMIC_SET_BIT(event, DISCONNECT_BIT);
+    }
+}
 
 void period_event_generator()
 {
@@ -487,6 +535,16 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
     else if (hdfsdm_filter == &hdfsdm1_filter3)
     {
         ATOMIC_SET_BIT(event, MIC4_SH_RDY_BIT);
+    }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    // CherryUSB不支持USB disconnect事件触发，
+    // 使用VBUS下降沿触发USB disconnect
+    if (GPIO_Pin == VBUS_DETECT_Pin)
+    {
+        on_disconnect();
     }
 }
 
