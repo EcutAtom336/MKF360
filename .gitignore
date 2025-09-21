@@ -4,6 +4,9 @@
 # Keil MDK .uvoptx file
 *.uvoptx
 
+# Keil MDK *.uvguix.* file
+*.uvguix.*
+
 # Keil MDK middle files
 Listings
 Objects
