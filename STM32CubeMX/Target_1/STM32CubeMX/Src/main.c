@@ -85,12 +85,12 @@ typedef enum
 
 /* USER CODE BEGIN PV */
 
-__attribute__((section("DTCM"))) static uint32_t event = 0;
+__attribute__((section(".DTCM"))) static uint32_t event = 0;
 
-__attribute__((section("DMA_RAM_D2"))) static int16_t mic1_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section("DMA_RAM_D2"))) static int16_t mic2_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section("DMA_RAM_D2"))) static int16_t mic3_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section("DMA_RAM_D2"))) static int16_t mic4_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section(".DMA_RAM_D2"))) static int16_t mic1_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section(".DMA_RAM_D2"))) static int16_t mic2_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section(".DMA_RAM_D2"))) static int16_t mic3_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
+__attribute__((section(".DMA_RAM_D2"))) static int16_t mic4_data[2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
 
 /* USER CODE END PV */
 
