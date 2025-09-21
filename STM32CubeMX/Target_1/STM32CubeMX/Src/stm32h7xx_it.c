@@ -78,6 +78,8 @@ void NMI_Handler(void)
 {
     /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
 
+    HAL_UART_Transmit(&huart1, "NMI handler.\n", sizeof("NMI handler.\n"), 1000);
+
     /* USER CODE END NonMaskableInt_IRQn 0 */
     /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
     while (1)
@@ -92,6 +94,8 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
     /* USER CODE BEGIN HardFault_IRQn 0 */
+
+    HAL_UART_Transmit(&huart1, "Hard fault handler.\n", sizeof("Hard fault handler.\n"), 1000);
 
     /* USER CODE END HardFault_IRQn 0 */
     while (1)
@@ -108,6 +112,8 @@ void MemManage_Handler(void)
 {
     /* USER CODE BEGIN MemoryManagement_IRQn 0 */
 
+    HAL_UART_Transmit(&huart1, "Memory manage fault handler.\n", sizeof("Memory manage fault handler.\n"), 1000);
+
     /* USER CODE END MemoryManagement_IRQn 0 */
     while (1)
     {
@@ -123,6 +129,8 @@ void BusFault_Handler(void)
 {
     /* USER CODE BEGIN BusFault_IRQn 0 */
 
+    HAL_UART_Transmit(&huart1, "Bus fault handler.\n", sizeof("Bus fault handler.\n"), 1000);
+
     /* USER CODE END BusFault_IRQn 0 */
     while (1)
     {
@@ -137,6 +145,8 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
     /* USER CODE BEGIN UsageFault_IRQn 0 */
+
+    HAL_UART_Transmit(&huart1, "Usage fault handler.\n", sizeof("Usage fault handler.\n"), 1000);
 
     /* USER CODE END UsageFault_IRQn 0 */
     while (1)
