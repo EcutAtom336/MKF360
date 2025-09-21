@@ -50,6 +50,8 @@ typedef enum
     EventGroup1Mic3SecondHalfReady,
     EventGroup1Mic4FirstHalfReady,
     EventGroup1Mic4SecondHalfReady,
+
+    EventGroup1Tick500Pass,
 } EventGroup1Idx_t;
 
 /* USER CODE END PTD */
@@ -68,6 +70,7 @@ typedef enum
 #define MIC3_SH_RDY_BIT (1U << EventGroup1Mic3SecondHalfReady)
 #define MIC4_FH_RDY_BIT (1U << EventGroup1Mic4FirstHalfReady)
 #define MIC4_SH_RDY_BIT (1U << EventGroup1Mic4SecondHalfReady)
+#define TICK_500_BIT (1U << EventGroup1Tick500Pass)
 
 #define MIC_FH_RDY_BIT (MIC1_FH_RDY_BIT | MIC2_FH_RDY_BIT | MIC3_FH_RDY_BIT | MIC4_FH_RDY_BIT)
 #define MIC_SH_RDY_BIT (MIC1_SH_RDY_BIT | MIC2_SH_RDY_BIT | MIC3_SH_RDY_BIT | MIC4_SH_RDY_BIT)
@@ -200,7 +203,6 @@ int main(void)
     }
 
     uint32_t full_cnt[4] = {0};
-    uint32_t last_500_tick = 0;
 
     while (1)
     {
@@ -256,12 +258,9 @@ int main(void)
             }
             ATOMIC_CLEAR_BIT(event, MIC4_SH_RDY_BIT);
         }
-
-        uint32_t tick = HAL_GetTick();
-
-        if (IS_OUT_OF_DATE(tick, last_500_tick, 500))
+        else if (event & TICK_500_BIT)
         {
-            last_500_tick = tick;
+            ATOMIC_CLEAR_BIT(event, TICK_500_BIT);
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
         }
     }
@@ -328,6 +327,22 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void period_event_generator()
+{
+    static size_t last_tick[] = {0U};
+    const size_t interval_tick[] = {500U};
+    const uint32_t event_bit[] = {TICK_500_BIT};
+    size_t tick = HAL_GetTick();
+    for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
+    {
+        if (IS_OUT_OF_DATE(tick, last_tick[i], interval_tick[i]))
+        {
+            last_tick[i] = tick;
+            ATOMIC_SET_BIT(event, event_bit[i]);
+        }
+    }
+}
 
 void mkf360_svc_handler(uint32_t *stacked)
 {
