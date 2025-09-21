@@ -50,13 +50,7 @@ typedef enum
     EventGroup1Mic3SecondHalfReady,
     EventGroup1Mic4FirstHalfReady,
     EventGroup1Mic4SecondHalfReady,
-
-    EventGroup1Max = 32,
 } EventGroup1Idx_t;
-
-#if EventGroup1Max >= 32
-#error "Event group 1 event too many!"
-#endif
 
 /* USER CODE END PTD */
 
