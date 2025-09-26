@@ -62,6 +62,8 @@ extern DMA_HandleTypeDef hdma_dfsdm1_flt0;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt1;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt2;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt3;
+extern MDMA_HandleTypeDef hmdma_mdma_channel0_sw_0;
+extern MDMA_HandleTypeDef hmdma_mdma_channel1_sw_0;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
 /* USER CODE BEGIN EV */
@@ -320,6 +322,21 @@ void USART1_IRQHandler(void)
     /* USER CODE BEGIN USART1_IRQn 1 */
 
     /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
+ * @brief This function handles MDMA global interrupt.
+ */
+void MDMA_IRQHandler(void)
+{
+    /* USER CODE BEGIN MDMA_IRQn 0 */
+
+    /* USER CODE END MDMA_IRQn 0 */
+    HAL_MDMA_IRQHandler(&hmdma_mdma_channel0_sw_0);
+    HAL_MDMA_IRQHandler(&hmdma_mdma_channel1_sw_0);
+    /* USER CODE BEGIN MDMA_IRQn 1 */
+
+    /* USER CODE END MDMA_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

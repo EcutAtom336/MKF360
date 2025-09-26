@@ -17,6 +17,7 @@ generator-import:
         - file: ./STM32CubeMX/Src/gpio.c
         - file: ./STM32CubeMX/Src/dfsdm.c
         - file: ./STM32CubeMX/Src/dma.c
+        - file: ./STM32CubeMX/Src/mdma.c
         - file: ./STM32CubeMX/Src/quadspi.c
         - file: ./STM32CubeMX/Src/usart.c
         - file: ./STM32CubeMX/Src/stm32h7xx_it.c
