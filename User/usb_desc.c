@@ -23,6 +23,11 @@
 #define AUDIO_IN_EP 0x83
 #define AUDIO_OUT_EP 0x03
 
+#define CDC_FIRST_INTERFACE 0x00
+#define UAC_FIRST_INTERFACE 0x02
+#define UAC_SPEAKER_INTERFACE 0x03
+#define UAC_MIC_INTERFACE 0x04
+
 #define EP_INTERVAL 0x01
 #define FEEDBACK_ENDP_PACKET_SIZE 0x03
 
@@ -94,20 +99,20 @@ static const uint8_t config_descriptor[] = {
                                USBD_MAX_POWER          // bMaxPower
                                ),
     //
-    CDC_ACM_DESCRIPTOR_INIT(0x00,        // bFirstInterface
-                            CDC_INT_EP,  // int_ep
-                            CDC_OUT_EP,  // out_ep
-                            CDC_IN_EP,   // in_ep
-                            CDC_MAX_MPS, // wMaxPacketSize
-                            0x02         // str_idx
+    CDC_ACM_DESCRIPTOR_INIT(CDC_FIRST_INTERFACE, // bFirstInterface
+                            CDC_INT_EP,          // int_ep
+                            CDC_OUT_EP,          // out_ep
+                            CDC_IN_EP,           // in_ep
+                            CDC_MAX_MPS,         // wMaxPacketSize
+                            0x02                 // str_idx
                             ),
     //
-    AUDIO_AC_DESCRIPTOR_INIT(0x02,         // bFirstInterface
-                             0x03,         // bInterfaceCount
-                             AUDIO_AC_SIZ, // wTotalLength
-                             0x00,         // stridx
-                             0x03,         //
-                             0x04          //
+    AUDIO_AC_DESCRIPTOR_INIT(UAC_FIRST_INTERFACE, // bFirstInterface
+                             0x03,                // bInterfaceCount
+                             AUDIO_AC_SIZ,        // wTotalLength
+                             0x00,                // stridx
+                             0x03,                //
+                             0x04                 //
                              ),
 
     AUDIO_AC_INPUT_TERMINAL_DESCRIPTOR_INIT(0x01,               // bTerminalID
@@ -142,7 +147,7 @@ static const uint8_t config_descriptor[] = {
                                              0x05                   // bSourceID
                                              ),
 
-    AUDIO_AS_DESCRIPTOR_INIT(0x03,                                    // bInterfaceNumber
+    AUDIO_AS_DESCRIPTOR_INIT(UAC_SPEAKER_INTERFACE,                   // bInterfaceNumber
                              0x04,                                    // bTerminalLink
                              AUDIO_SPEAKER_CHANNELS,                  // bNrChannels
                              AUDIO_SPEAKER_FRAME_SIZE_BYTE,           // bSubFrameSize
@@ -153,7 +158,7 @@ static const uint8_t config_descriptor[] = {
                              EP_INTERVAL,                             // bInterval
                              AUDIO_SAMPLE_FREQ_3B(AUDIO_SPEAKER_FREQ) //
                              ),
-    AUDIO_AS_DESCRIPTOR_INIT(0x04,                                // bInterfaceNumber
+    AUDIO_AS_DESCRIPTOR_INIT(UAC_MIC_INTERFACE,                   // bInterfaceNumber
                              0x03,                                // bTerminalLink
                              AUDIO_MIC_CHANNELS,                  // bNrChannels
                              AUDIO_MIC_FRAME_SIZE_BYTE,           // bSubFrameSize
@@ -297,13 +302,13 @@ void usbd_cdc_acm_set_dtr(uint8_t busid, uint8_t intf, bool dtr)
 
 void usbd_audio_open(uint8_t busid, uint8_t intf)
 {
-    if (intf == 0x03)
+    if (intf == UAC_SPEAKER_INTERFACE)
     {
         rx_flag = 1;
         usbd_ep_start_read(busid, AUDIO_OUT_EP, uac_read_buffer, AUDIO_OUT_PACKET);
         printf("OPEN1\r\n");
     }
-    else
+    else if (intf == UAC_MIC_INTERFACE)
     {
         tx_flag = 1;
         uac_ep_tx_busy_flag = false;
@@ -315,12 +320,12 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
 void usbd_audio_close(uint8_t busid, uint8_t intf)
 {
     (void)busid;
-    if (intf == 1)
+    if (intf == UAC_SPEAKER_INTERFACE)
     {
         rx_flag = 0;
         printf("CLOSE1\r\n");
     }
-    else
+    else if (intf == UAC_MIC_INTERFACE)
     {
         tx_flag = 0;
         uac_ep_tx_busy_flag = false;
