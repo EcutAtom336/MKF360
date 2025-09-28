@@ -232,6 +232,14 @@ volatile bool rx_flag = 0;
 volatile uint32_t s_mic_sample_rate;
 volatile uint32_t s_speaker_sample_rate;
 
+__attribute__((section(".DTCM"))) UacOpenCallback uac_open_speaker_callback;
+__attribute__((section(".DTCM"))) UacCloseCallback uac_close_speaker_callback;
+__attribute__((section(".DTCM"))) UacDataCallback uac_speaker_data_callback;
+
+__attribute__((section(".DTCM"))) UacOpenCallback uac_open_mic_callback;
+__attribute__((section(".DTCM"))) UacCloseCallback uac_close_mic_callback;
+__attribute__((section(".DTCM"))) UacDataCallback uac_mic_data_callback;
+
 void usbd_event_handler(uint8_t busid, uint8_t event)
 {
     (void)busid;
@@ -304,16 +312,24 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
 {
     if (intf == UAC_SPEAKER_INTERFACE)
     {
+        if (uac_open_speaker_callback)
+        {
+            uac_open_speaker_callback();
+        }
         rx_flag = 1;
         usbd_ep_start_read(busid, AUDIO_OUT_EP, uac_read_buffer, AUDIO_OUT_PACKET);
-        printf("OPEN1\r\n");
+        printf("Open speaker.\n");
     }
     else if (intf == UAC_MIC_INTERFACE)
     {
+        if (uac_open_mic_callback)
+        {
+            uac_open_mic_callback();
+        }
         tx_flag = 1;
         uac_ep_tx_busy_flag = false;
         usbd_ep_start_write(busid, AUDIO_IN_EP, uac_write_buffer, AUDIO_IN_PACKET);
-        printf("OPEN2\r\n");
+        printf("Open mic.\n");
     }
 }
 
@@ -322,14 +338,22 @@ void usbd_audio_close(uint8_t busid, uint8_t intf)
     (void)busid;
     if (intf == UAC_SPEAKER_INTERFACE)
     {
+        if (uac_close_speaker_callback)
+        {
+            uac_close_speaker_callback();
+        }
         rx_flag = 0;
-        printf("CLOSE1\r\n");
+        printf("Close speaker.\n");
     }
     else if (intf == UAC_MIC_INTERFACE)
     {
+        if (uac_close_mic_callback)
+        {
+            uac_close_mic_callback();
+        }
         tx_flag = 0;
         uac_ep_tx_busy_flag = false;
-        printf("CLOSE2\r\n");
+        printf("Close mic\n");
     }
 }
 
@@ -370,6 +394,10 @@ void usbd_audio_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     (void)ep;
     (void)nbytes;
     usbd_ep_start_read(busid, AUDIO_OUT_EP, uac_read_buffer, AUDIO_OUT_PACKET);
+    if (uac_speaker_data_callback)
+    {
+        uac_speaker_data_callback((int16_t *)&uac_read_buffer[0], nbytes);
+    }
 }
 
 static uint32_t sent_bytes = 0;
@@ -379,11 +407,18 @@ void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     (void)ep;
     (void)nbytes;
 
-    memcpy(uac_write_buffer, (void *)BATTERY_LOW_PCM + sent_bytes, AUDIO_IN_PACKET);
-    sent_bytes += AUDIO_IN_PACKET;
-    if (sent_bytes + AUDIO_IN_PACKET >= sizeof(BATTERY_LOW_PCM))
+    if (uac_mic_data_callback)
     {
-        sent_bytes = 0;
+        uac_mic_data_callback((int16_t *)&uac_write_buffer[0], nbytes);
+    }
+    else
+    {
+        memcpy(uac_write_buffer, (void *)BATTERY_LOW_PCM + sent_bytes, AUDIO_IN_PACKET);
+        sent_bytes += AUDIO_IN_PACKET;
+        if (sent_bytes + AUDIO_IN_PACKET >= sizeof(BATTERY_LOW_PCM))
+        {
+            sent_bytes = 0;
+        }
     }
     usbd_ep_start_write(busid, AUDIO_IN_EP, uac_write_buffer, AUDIO_IN_PACKET);
 

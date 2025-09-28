@@ -21,6 +21,7 @@
 #include "dfsdm.h"
 #include "dma.h"
 #include "gpio.h"
+#include "mdma.h"
 #include "quadspi.h"
 #include "usart.h"
 
@@ -33,6 +34,7 @@
 
 #include "usbd_core.h"
 
+#include "User/mic.h"
 #include "User/usb_desc.h"
 #include "mdma.h"
 
@@ -62,9 +64,6 @@ typedef enum
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define AUDIO_FREQ (16000U)
-#define DFSDM_DMA_FRAME_SAMPLE_COUNT (AUDIO_FREQ / 50U)
-
 #define MIC_DATA_INTERLACE_COMPLETE_BIT (1U << EventGroup1MicDataInterlaceComplete)
 
 #define UAC_CONNECT_BIT (1U << EventGroup1UacConnect)
@@ -90,15 +89,6 @@ __attribute__((section(".DTCM"))) static InterfaceType_t current_interface = Non
 __attribute__((section(".DTCM"))) static uint32_t event = 0;
 
 // MDMA链接寄存器必须双字对齐
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_1;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_2;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_3;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_1;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_2;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_3;
-
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_DMA_FRAME_SAMPLE_COUNT];
-__attribute__((section(".DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_COUNT];
 
 /* USER CODE END PV */
 
@@ -107,9 +97,7 @@ void SystemClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void mdma_init();
-static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, const uint8_t idx);
-static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma);
+static void on_mic_data_interlaces();
 static void common_connect();
 static void common_disconnect();
 
@@ -170,12 +158,13 @@ int main(void)
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_DMA_Init();
+    MX_MDMA_Init();
     MX_QUADSPI_Init();
     MX_DFSDM1_Init();
     MX_USART1_UART_Init();
     /* USER CODE BEGIN 2 */
 
-    mdma_init();
+    mic_mdma_init();
 
     /* USER CODE END 2 */
 
@@ -185,6 +174,8 @@ int main(void)
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
     uint8_t flag = 0;
     uint32_t verify_pass_cnt = 0;
+
+    register_mic_interlaced_data_ready_callback(on_mic_data_interlaces);
 
     while (1)
     {
@@ -196,22 +187,18 @@ int main(void)
         {
             ATOMIC_CLEAR_BIT(event, MIC_DATA_INTERLACE_COMPLETE_BIT);
             // 验证Mic data被MDMA正确交错
-            for (size_t i = 0; i < DFSDM_DMA_FRAME_SAMPLE_COUNT; i++)
+            if (mic_verify_interlaced_data())
             {
-                for (size_t j = 0; j < 4; j++)
+                if (++verify_pass_cnt >= 100U)
                 {
-                    if (mic_data[j][flag][i] != mic_data_interlaced[i * 4 + j])
-                    {
-                        printf("Mic %u data %u: %d, interlaced data: %d, error!\n", j, i, mic_data[j][flag][i],
-                               mic_data_interlaced[i * 4 + j]);
-                        Error_Handler();
-                    }
+                    verify_pass_cnt = 0;
+                    printf("MDMA interlace mic data right 100 times. Tick: %u\n", HAL_GetTick());
                 }
             }
-            if (verify_pass_cnt++ >= 100U)
+            else
             {
-                verify_pass_cnt = 0;
-                printf("MDMA interlace mic data right 100 times.\n");
+                printf("MDMA interlace mic data error!\n");
+                Error_Handler();
             }
             flag = flag == 0 ? 1 : 0;
         }
@@ -298,49 +285,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-static void mic_start()
-{
-    HAL_StatusTypeDef ret_hal = HAL_OK;
-    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
-        &hdfsdm1_filter0,
-        &hdfsdm1_filter1,
-        &hdfsdm1_filter2,
-        &hdfsdm1_filter3,
-    };
-
-    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
-    {
-        ret_hal =
-            HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], mic_data[i][0], DFSDM_DMA_FRAME_SAMPLE_COUNT * 2);
-        if (ret_hal != HAL_OK)
-        {
-            printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);
-            Error_Handler();
-        }
-    }
-}
-
-static void mic_stop()
-{
-    HAL_StatusTypeDef ret_hal = HAL_OK;
-    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
-        &hdfsdm1_filter0,
-        &hdfsdm1_filter1,
-        &hdfsdm1_filter2,
-        &hdfsdm1_filter3,
-    };
-
-    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
-    {
-        ret_hal = HAL_DFSDM_FilterRegularStop_DMA(dfsdm_filters[i]);
-        if (ret_hal != HAL_OK)
-        {
-            printf("hdfsdm1 filter%u stop fail, code: %u", i, ret_hal);
-            Error_Handler();
-        }
-    }
-}
 
 static void common_connect()
 {
@@ -487,221 +431,8 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
     }
 }
 
-static void mdma_init()
+static void on_mic_data_interlaces()
 {
-    __HAL_RCC_MDMA_CLK_ENABLE();
-
-    HAL_StatusTypeDef ret_hal = HAL_OK;
-    MDMA_LinkNodeConfTypeDef nodeConfig = {
-        .Init =
-            {
-                .Request = MDMA_REQUEST_SW,
-                .TransferTriggerMode = MDMA_FULL_TRANSFER,
-                .Priority = MDMA_PRIORITY_VERY_HIGH,
-                .Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE,
-                .SourceInc = MDMA_SRC_INC_HALFWORD,
-                .DestinationInc = MDMA_DEST_INC_HALFWORD,
-                .SourceDataSize = MDMA_SRC_DATASIZE_HALFWORD,
-                .DestDataSize = MDMA_DEST_DATASIZE_HALFWORD,
-                .DataAlignment = MDMA_DATAALIGN_PACKENABLE,
-                .BufferTransferLength = 2,
-                .SourceBurst = MDMA_SOURCE_BURST_SINGLE,
-                .DestBurst = MDMA_DEST_BURST_SINGLE,
-                .SourceBlockAddressOffset = 0,
-                .DestBlockAddressOffset = 6,
-            },
-        .PostRequestMaskAddress = 0,
-        .PostRequestMaskData = 0,
-        .BlockDataLength = 2,
-        .BlockCount = DFSDM_DMA_FRAME_SAMPLE_COUNT,
-    };
-
-    // MDMA channel 0
-    // For interlace mic first half data
-    hmdma_mdma_channel0_sw_0.Instance = MDMA_Channel0;
-    hmdma_mdma_channel0_sw_0.Init.Request = MDMA_REQUEST_SW;
-    hmdma_mdma_channel0_sw_0.Init.TransferTriggerMode = MDMA_FULL_TRANSFER;
-    hmdma_mdma_channel0_sw_0.Init.Priority = MDMA_PRIORITY_VERY_HIGH;
-    hmdma_mdma_channel0_sw_0.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-    hmdma_mdma_channel0_sw_0.Init.SourceInc = MDMA_SRC_INC_HALFWORD;
-    hmdma_mdma_channel0_sw_0.Init.DestinationInc = MDMA_DEST_INC_HALFWORD;
-    hmdma_mdma_channel0_sw_0.Init.SourceDataSize = MDMA_SRC_DATASIZE_HALFWORD;
-    hmdma_mdma_channel0_sw_0.Init.DestDataSize = MDMA_DEST_DATASIZE_HALFWORD;
-    hmdma_mdma_channel0_sw_0.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
-    hmdma_mdma_channel0_sw_0.Init.BufferTransferLength = 2;
-    hmdma_mdma_channel0_sw_0.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
-    hmdma_mdma_channel0_sw_0.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-    hmdma_mdma_channel0_sw_0.Init.SourceBlockAddressOffset = 0;
-    hmdma_mdma_channel0_sw_0.Init.DestBlockAddressOffset = 6;
-    ret_hal = HAL_MDMA_Init(&hmdma_mdma_channel0_sw_0);
-    if (ret_hal != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    MDMA_LinkNodeTypeDef *const mdma_ch0_node[] = {
-        &node_mdma_channel0_sw_1,
-        &node_mdma_channel0_sw_2,
-        &node_mdma_channel0_sw_3,
-    };
-    int16_t *const mdma_ch0_src_address[] = {
-        &(mic_data[1][0][0]),
-        &(mic_data[2][0][0]),
-        &(mic_data[3][0][0]),
-    };
-    int16_t *const mdma_ch0_dest_address[] = {
-        &(mic_data_interlaced[1]),
-        &(mic_data_interlaced[2]),
-        &(mic_data_interlaced[3]),
-    };
-    for (size_t i = 0; i < 3; i++)
-    {
-        nodeConfig.SrcAddress = (uint32_t)mdma_ch0_src_address[i];
-        nodeConfig.DstAddress = (uint32_t)mdma_ch0_dest_address[i];
-        ret_hal = HAL_MDMA_LinkedList_CreateNode(mdma_ch0_node[i], &nodeConfig);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-        ret_hal = HAL_MDMA_LinkedList_AddNode(&hmdma_mdma_channel0_sw_0, mdma_ch0_node[i], 0);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-    }
-
-    // MDMA channel 1
-    // For interlace mic second half data
-    hmdma_mdma_channel1_sw_0.Instance = MDMA_Channel1;
-    hmdma_mdma_channel1_sw_0.Init.Request = MDMA_REQUEST_SW;
-    hmdma_mdma_channel1_sw_0.Init.TransferTriggerMode = MDMA_FULL_TRANSFER;
-    hmdma_mdma_channel1_sw_0.Init.Priority = MDMA_PRIORITY_VERY_HIGH;
-    hmdma_mdma_channel1_sw_0.Init.Endianness = MDMA_LITTLE_ENDIANNESS_PRESERVE;
-    hmdma_mdma_channel1_sw_0.Init.SourceInc = MDMA_SRC_INC_HALFWORD;
-    hmdma_mdma_channel1_sw_0.Init.DestinationInc = MDMA_DEST_INC_HALFWORD;
-    hmdma_mdma_channel1_sw_0.Init.SourceDataSize = MDMA_SRC_DATASIZE_HALFWORD;
-    hmdma_mdma_channel1_sw_0.Init.DestDataSize = MDMA_DEST_DATASIZE_HALFWORD;
-    hmdma_mdma_channel1_sw_0.Init.DataAlignment = MDMA_DATAALIGN_PACKENABLE;
-    hmdma_mdma_channel1_sw_0.Init.BufferTransferLength = 2;
-    hmdma_mdma_channel1_sw_0.Init.SourceBurst = MDMA_SOURCE_BURST_SINGLE;
-    hmdma_mdma_channel1_sw_0.Init.DestBurst = MDMA_DEST_BURST_SINGLE;
-    hmdma_mdma_channel1_sw_0.Init.SourceBlockAddressOffset = 0;
-    hmdma_mdma_channel1_sw_0.Init.DestBlockAddressOffset = 6;
-    if (HAL_MDMA_Init(&hmdma_mdma_channel1_sw_0) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    MDMA_LinkNodeTypeDef *const mdma_ch1_node[] = {
-        &node_mdma_channel1_sw_1,
-        &node_mdma_channel1_sw_2,
-        &node_mdma_channel1_sw_3,
-    };
-    int16_t *const mdma_ch1_src_address[] = {
-        &(mic_data[1][1][0]),
-        &(mic_data[2][1][0]),
-        &(mic_data[3][1][0]),
-    };
-    int16_t *const mdma_ch1_dest_address[] = {
-        &(mic_data_interlaced[1]),
-        &(mic_data_interlaced[2]),
-        &(mic_data_interlaced[3]),
-    };
-    for (size_t i = 0; i < 3; i++)
-    {
-        nodeConfig.SrcAddress = (uint32_t)mdma_ch1_src_address[i];
-        nodeConfig.DstAddress = (uint32_t)mdma_ch1_dest_address[i];
-        ret_hal = HAL_MDMA_LinkedList_CreateNode(mdma_ch1_node[i], &nodeConfig);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-        ret_hal = HAL_MDMA_LinkedList_AddNode(&hmdma_mdma_channel1_sw_0, mdma_ch1_node[i], 0);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-    }
-
-    /* MDMA interrupt initialization */
-    /* MDMA_IRQn interrupt configuration */
-    HAL_NVIC_SetPriority(MDMA_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(MDMA_IRQn);
-
-    HAL_MDMA_RegisterCallback(&hmdma_mdma_channel0_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, mic_data_interlace_complete);
-    HAL_MDMA_RegisterCallback(&hmdma_mdma_channel1_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, mic_data_interlace_complete);
-}
-
-static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, const uint8_t idx)
-{
-    static uint32_t internal_flag = 0;
-    const uint32_t INTERNAL_MIC1_FH_RDY_BIT = 1 << 0;
-    const uint32_t INTERNAL_MIC2_FH_RDY_BIT = 1 << 1;
-    const uint32_t INTERNAL_MIC3_FH_RDY_BIT = 1 << 2;
-    const uint32_t INTERNAL_MIC4_FH_RDY_BIT = 1 << 3;
-    const uint32_t INTERNAL_MIC1_SH_RDY_BIT = 1 << 4;
-    const uint32_t INTERNAL_MIC2_SH_RDY_BIT = 1 << 5;
-    const uint32_t INTERNAL_MIC3_SH_RDY_BIT = 1 << 6;
-    const uint32_t INTERNAL_MIC4_SH_RDY_BIT = 1 << 7;
-    const uint32_t INTERNAL_MIC_FH_RDY_BIT =
-        INTERNAL_MIC1_FH_RDY_BIT | INTERNAL_MIC2_FH_RDY_BIT | INTERNAL_MIC3_FH_RDY_BIT | INTERNAL_MIC4_FH_RDY_BIT;
-    const uint32_t INTERNAL_MIC_SH_RDY_BIT =
-        INTERNAL_MIC1_SH_RDY_BIT | INTERNAL_MIC2_SH_RDY_BIT | INTERNAL_MIC3_SH_RDY_BIT | INTERNAL_MIC4_SH_RDY_BIT;
-
-    if (hdfsdm_filter == &hdfsdm1_filter0)
-    {
-        ATOMIC_SET_BIT(internal_flag, idx == 0 ? INTERNAL_MIC1_FH_RDY_BIT : INTERNAL_MIC1_SH_RDY_BIT);
-    }
-    else if (hdfsdm_filter == &hdfsdm1_filter1)
-    {
-        ATOMIC_SET_BIT(internal_flag, idx == 0 ? INTERNAL_MIC2_FH_RDY_BIT : INTERNAL_MIC2_SH_RDY_BIT);
-    }
-    else if (hdfsdm_filter == &hdfsdm1_filter2)
-    {
-        ATOMIC_SET_BIT(internal_flag, idx == 0 ? INTERNAL_MIC3_FH_RDY_BIT : INTERNAL_MIC3_SH_RDY_BIT);
-    }
-    else if (hdfsdm_filter == &hdfsdm1_filter3)
-    {
-        ATOMIC_SET_BIT(internal_flag, idx == 0 ? INTERNAL_MIC4_FH_RDY_BIT : INTERNAL_MIC4_SH_RDY_BIT);
-    }
-
-    if ((internal_flag & INTERNAL_MIC_FH_RDY_BIT) == INTERNAL_MIC_FH_RDY_BIT)
-    {
-        ATOMIC_CLEAR_BIT(internal_flag, INTERNAL_MIC_FH_RDY_BIT);
-        HAL_StatusTypeDef ret_hal =
-            HAL_MDMA_Start_IT(&hmdma_mdma_channel0_sw_0, (uint32_t)&mic_data[0][0][0],
-                              (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_COUNT);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-    }
-    else if ((internal_flag & INTERNAL_MIC_SH_RDY_BIT) == INTERNAL_MIC_SH_RDY_BIT)
-    {
-        ATOMIC_CLEAR_BIT(internal_flag, INTERNAL_MIC_SH_RDY_BIT);
-        HAL_StatusTypeDef ret_hal =
-            HAL_MDMA_Start_IT(&hmdma_mdma_channel1_sw_0, (uint32_t)&mic_data[0][1][0],
-                              (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_COUNT);
-        if (ret_hal != HAL_OK)
-        {
-            Error_Handler();
-        }
-    }
-}
-
-void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-    dfsdm_dma_irq(hdfsdm_filter, 0);
-}
-
-void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
-{
-    dfsdm_dma_irq(hdfsdm_filter, 1);
-}
-
-static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
-{
-    (void)hmdma;
     ATOMIC_SET_BIT(event, MIC_DATA_INTERLACE_COMPLETE_BIT);
 }
 
