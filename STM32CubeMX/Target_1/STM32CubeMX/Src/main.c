@@ -34,6 +34,7 @@
 
 #include "usbd_core.h"
 
+#include "MKF360_config.h"
 #include "User/mic.h"
 #include "User/usb_desc.h"
 #include "mdma.h"
@@ -45,16 +46,6 @@
 
 typedef enum
 {
-    EventGroup1MicDataInterlaceComplete,
-
-    EventGroup1UacConnect,
-    EventGroup1Disconnect,
-
-    EventGroup1Tick500Pass,
-} EventGroup1Idx_t;
-
-typedef enum
-{
     None,
     Usb,
 } InterfaceType_t;
@@ -63,13 +54,6 @@ typedef enum
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
-#define MIC_DATA_INTERLACE_COMPLETE_BIT (1U << EventGroup1MicDataInterlaceComplete)
-
-#define UAC_CONNECT_BIT (1U << EventGroup1UacConnect)
-#define DISCONNECT_BIT (1U << EventGroup1Disconnect)
-
-#define TICK_500_BIT (1U << EventGroup1Tick500Pass)
 
 /* USER CODE END PD */
 
@@ -183,9 +167,9 @@ int main(void)
 
         /* USER CODE BEGIN 3 */
 
-        if (event & MIC_DATA_INTERLACE_COMPLETE_BIT)
+        if (event & EVENT_BIT(EventGroup1MicDataInterlaceComplete))
         {
-            ATOMIC_CLEAR_BIT(event, MIC_DATA_INTERLACE_COMPLETE_BIT);
+            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
             // 验证Mic data被MDMA正确交错
             if (mic_verify_interlaced_data())
             {
@@ -202,23 +186,23 @@ int main(void)
             }
             flag = flag == 0 ? 1 : 0;
         }
-        else if (event & UAC_CONNECT_BIT)
+        else if (event & EVENT_BIT(EventGroup1UacConnect))
         {
-            ATOMIC_CLEAR_BIT(event, UAC_CONNECT_BIT);
+            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1UacConnect));
             common_connect();
             current_interface = Usb;
             printf("USB connect.\n");
         }
-        else if (event & DISCONNECT_BIT)
+        else if (event & EVENT_BIT(EventGroup1Disconnect))
         {
-            ATOMIC_CLEAR_BIT(event, DISCONNECT_BIT);
+            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1Disconnect));
             common_disconnect();
             current_interface = None;
             printf("USB disconnect.\n");
         }
-        else if (event & TICK_500_BIT)
+        else if (event & EVENT_BIT(EventGroup1Tick500Pass))
         {
-            ATOMIC_CLEAR_BIT(event, TICK_500_BIT);
+            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1Tick500Pass));
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
         }
     }
@@ -298,14 +282,14 @@ static void common_disconnect()
 
 void on_uac_connect()
 {
-    ATOMIC_SET_BIT(event, UAC_CONNECT_BIT);
+    ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1UacConnect));
 }
 
 void on_disconnect()
 {
     if (current_interface == Usb)
     {
-        ATOMIC_SET_BIT(event, DISCONNECT_BIT);
+        ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1Disconnect));
     }
 }
 
@@ -313,7 +297,7 @@ void period_event_generator()
 {
     static size_t last_tick[] = {0U};
     const size_t interval_tick[] = {500U};
-    const uint32_t event_bit[] = {TICK_500_BIT};
+    const uint32_t event_bit[] = {EVENT_BIT(EventGroup1Tick500Pass)};
     size_t tick = HAL_GetTick();
     for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
     {
@@ -433,7 +417,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
 
 static void on_mic_data_interlaces()
 {
-    ATOMIC_SET_BIT(event, MIC_DATA_INTERLACE_COMPLETE_BIT);
+    ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
