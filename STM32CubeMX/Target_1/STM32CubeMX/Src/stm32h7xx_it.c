@@ -58,10 +58,12 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_dac1_ch1;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt0;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt1;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt2;
 extern DMA_HandleTypeDef hdma_dfsdm1_flt3;
+extern DMA_HandleTypeDef hdma_memtomem_dma1_stream7;
 extern MDMA_HandleTypeDef hmdma_mdma_channel0_sw_0;
 extern MDMA_HandleTypeDef hmdma_mdma_channel1_sw_0;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -297,6 +299,20 @@ void DMA1_Stream4_IRQHandler(void)
 }
 
 /**
+ * @brief This function handles DMA1 stream5 global interrupt.
+ */
+void DMA1_Stream5_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream5_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_dac1_ch1);
+    /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream5_IRQn 1 */
+}
+
+/**
  * @brief This function handles EXTI line[9:5] interrupts.
  */
 void EXTI9_5_IRQHandler(void)
@@ -322,6 +338,20 @@ void USART1_IRQHandler(void)
     /* USER CODE BEGIN USART1_IRQn 1 */
 
     /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
+ * @brief This function handles DMA1 stream7 global interrupt.
+ */
+void DMA1_Stream7_IRQHandler(void)
+{
+    /* USER CODE BEGIN DMA1_Stream7_IRQn 0 */
+
+    /* USER CODE END DMA1_Stream7_IRQn 0 */
+    HAL_DMA_IRQHandler(&hdma_memtomem_dma1_stream7);
+    /* USER CODE BEGIN DMA1_Stream7_IRQn 1 */
+
+    /* USER CODE END DMA1_Stream7_IRQn 1 */
 }
 
 /**

@@ -399,6 +399,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\mic.c</FilePath>
             </File>
+            <File>
+              <FileName>speaker_headset.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\speaker_headset.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -458,6 +463,16 @@
               <FileName>mdma.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\mdma.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\tim.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -593,6 +608,16 @@
               <FileName>stm32h7xx_hal_uart_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_uart_ex.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_dac_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dac_ex.c</FilePath>
             </File>
           </Files>
         </Group>

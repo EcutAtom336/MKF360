@@ -62,6 +62,10 @@ extern "C"
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SPEAKER_EN_Pin GPIO_PIN_0
+#define SPEAKER_EN_GPIO_Port GPIOA
+#define HEADSET_OUT_EN_Pin GPIO_PIN_5
+#define HEADSET_OUT_EN_GPIO_Port GPIOC
 #define VBUS_DETECT_Pin GPIO_PIN_9
 #define VBUS_DETECT_GPIO_Port GPIOA
 #define VBUS_DETECT_EXTI_IRQn EXTI9_5_IRQn
