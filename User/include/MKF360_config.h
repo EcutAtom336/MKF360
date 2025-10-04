@@ -5,6 +5,8 @@ typedef enum
 {
     EventGroup1MicDataInterlaceComplete,
 
+    EventGroup1DacBufferReset,
+
     EventGroup1UacConnect,
     EventGroup1Disconnect,
 
@@ -15,5 +17,6 @@ typedef enum
 
 #define MKF360_MIC_SAMPLE_RATE_HZ (16000U)
 #define DFSDM_DMA_FRAME_SAMPLE_NUM (MKF360_MIC_SAMPLE_RATE_HZ / 50U)
+#define DAC_DMA_FRAME_SAMPLE_NUM (MKF360_MIC_SAMPLE_RATE_HZ / 50U)
 
 #endif // !__MKF360_CONFIG_H__

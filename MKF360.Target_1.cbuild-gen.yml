@@ -99,6 +99,8 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/retarget.c
           category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/mic.c
+          category: sourceC
     - group: CherryUSB
       files:
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/core/usbd_core.c
