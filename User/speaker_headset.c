@@ -29,7 +29,6 @@ typedef struct
 
 __attribute__((section(".bss.DMA_RAM_D2")))
 __attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
-const uint32_t dummy = (32768 << 16) + 32768;
 __attribute__((section(".bss.DTCM"))) uint8_t dac_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) uint16_t dac_idle_buffer_spk_full;
 __attribute__((section(".bss.DTCM"))) uint16_t dac_idle_buffer_hdst_full;
@@ -38,16 +37,8 @@ __attribute__((section(".bss.DTCM"))) DacBufferResetCallback dac_buffer_reset_ca
 
 __attribute__((section(".bss.DTCM"))) uint32_t flags;
 
-static void on_dac_buffer_cleared();
-
 void spk_hdst_init()
 {
-    HAL_StatusTypeDef ret_hal =
-        HAL_DMA_RegisterCallback(&hdma_memtomem_dma1_stream7, HAL_DMA_XFER_CPLT_CB_ID, on_dac_buffer_cleared);
-    if (ret_hal != HAL_OK)
-    {
-        printf("speaker headset init fail.\n");
-    }
     flags |= INIT_FLAG;
 }
 
@@ -153,28 +144,21 @@ void spk_hdst_ctl(const SpkHdstCmd_t cmd, SpkHdstCtlData_t *data)
 void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     (void)hdac;
-    HAL_StatusTypeDef ret_hal = HAL_DMA_Start_IT(&hdma_memtomem_dma1_stream7, (uint32_t)&dummy,
-                                                 (uint32_t)&dac_dma_buffer[0][0], DAC_DMA_FRAME_SAMPLE_NUM);
-    if (ret_hal != HAL_OK)
+    arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0], DAC_DMA_FRAME_SAMPLE_NUM);
+    dac_idle_buffer_idx = 0U;
+    dac_idle_buffer_spk_full = 0U;
+    dac_idle_buffer_hdst_full = 0U;
+    if (dac_buffer_reset_callback != NULL)
     {
-        Error_Handler();
+        dac_buffer_reset_callback();
     }
 }
 
 void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     (void)hdac;
-    HAL_StatusTypeDef ret_hal = HAL_DMA_Start_IT(&hdma_memtomem_dma1_stream7, (uint32_t)&dummy,
-                                                 (uint32_t)&dac_dma_buffer[1][0], DAC_DMA_FRAME_SAMPLE_NUM);
-    if (ret_hal != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
-
-static void on_dac_buffer_cleared()
-{
-    dac_idle_buffer_idx = dac_idle_buffer_idx == 0U ? 1U : 0U;
+    arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0], DAC_DMA_FRAME_SAMPLE_NUM);
+    dac_idle_buffer_idx = 1U;
     dac_idle_buffer_spk_full = 0U;
     dac_idle_buffer_hdst_full = 0U;
     if (dac_buffer_reset_callback != NULL)
