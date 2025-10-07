@@ -11,18 +11,18 @@
 #include "dfsdm.h"
 #include "mdma.h"
 
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_1;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_2;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_3;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_1;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_2;
-__attribute__((aligned(8))) __attribute__((section(".DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_3;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_1;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_2;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel0_sw_3;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_1;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_2;
+__attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_3;
 
-__attribute__((section(".DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_DMA_FRAME_SAMPLE_NUM];
-__attribute__((section(".DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_NUM];
-__attribute__((section(".DTCM"))) static uint8_t mic_data_interlaced_from;
+__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_DMA_FRAME_SAMPLE_NUM];
+__attribute__((section(".bss.DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_NUM];
+__attribute__((section(".bss.DTCM"))) static uint8_t mic_data_interlaced_from;
 
-__attribute__((section(".DTCM"))) static MicInterlacedDataReadyCallback mic_interlaced_data_ready_callback;
+__attribute__((section(".bss.DTCM"))) static MicInterlacedDataReadyCallback mic_interlaced_data_ready_callback;
 
 static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
 {

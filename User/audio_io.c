@@ -4,9 +4,9 @@
 
 #include "User/usb_desc.h"
 
-__attribute__((section(".DTCM"))) OnAudioPathChangeCallback on_audio_path_change_callback = NULL;
-__attribute__((section(".DTCM"))) OnAudioInCallback on_audio_in_callback = NULL;
-__attribute__((section(".DTCM"))) OnAudioOutCallback on_audio_out_callback = NULL;
+__attribute__((section(".bss.DTCM"))) OnAudioPathChangeCallback on_audio_path_change_callback;
+__attribute__((section(".bss.DTCM"))) OnAudioInCallback on_audio_in_callback;
+__attribute__((section(".bss.DTCM"))) OnAudioOutCallback on_audio_out_callback;
 
 void audio_init()
 {

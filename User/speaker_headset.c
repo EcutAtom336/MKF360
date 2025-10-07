@@ -27,16 +27,16 @@ typedef struct
     uint16_t ch2;
 } DacFrame_t;
 
-__attribute__((section(".DMA_RAM_D2")))
+__attribute__((section(".bss.DMA_RAM_D2")))
 __attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 const uint32_t dummy = (32768 << 16) + 32768;
-__attribute__((section(".DTCM"))) uint8_t dac_idle_buffer_idx;
-__attribute__((section(".DTCM"))) uint16_t dac_idle_buffer_spk_full;
-__attribute__((section(".DTCM"))) uint16_t dac_idle_buffer_hdst_full;
+__attribute__((section(".bss.DTCM"))) uint8_t dac_idle_buffer_idx;
+__attribute__((section(".bss.DTCM"))) uint16_t dac_idle_buffer_spk_full;
+__attribute__((section(".bss.DTCM"))) uint16_t dac_idle_buffer_hdst_full;
 
-__attribute__((section(".DTCM"))) DacBufferResetCallback dac_buffer_reset_callback;
+__attribute__((section(".bss.DTCM"))) DacBufferResetCallback dac_buffer_reset_callback;
 
-__attribute__((section(".DTCM"))) uint32_t flags;
+__attribute__((section(".bss.DTCM"))) uint32_t flags;
 
 static void on_dac_buffer_cleared();
 

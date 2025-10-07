@@ -232,13 +232,13 @@ volatile bool rx_flag = 0;
 volatile uint32_t s_mic_sample_rate;
 volatile uint32_t s_speaker_sample_rate;
 
-__attribute__((section(".DTCM"))) UacOpenCallback uac_open_speaker_callback;
-__attribute__((section(".DTCM"))) UacCloseCallback uac_close_speaker_callback;
-__attribute__((section(".DTCM"))) UacDataCallback uac_speaker_data_callback;
+__attribute__((section(".bss.DTCM"))) UacOpenCallback uac_open_speaker_callback;
+__attribute__((section(".bss.DTCM"))) UacCloseCallback uac_close_speaker_callback;
+__attribute__((section(".bss.DTCM"))) UacDataCallback uac_speaker_data_callback;
 
-__attribute__((section(".DTCM"))) UacOpenCallback uac_open_mic_callback;
-__attribute__((section(".DTCM"))) UacCloseCallback uac_close_mic_callback;
-__attribute__((section(".DTCM"))) UacDataCallback uac_mic_data_callback;
+__attribute__((section(".bss.DTCM"))) UacOpenCallback uac_open_mic_callback;
+__attribute__((section(".bss.DTCM"))) UacCloseCallback uac_close_mic_callback;
+__attribute__((section(".bss.DTCM"))) UacDataCallback uac_mic_data_callback;
 
 void usbd_event_handler(uint8_t busid, uint8_t event)
 {

@@ -5,9 +5,9 @@
 
 #define BUFFER_SIZE (512)
 
-__attribute__((section(".DMA_RAM_D2"))) uint8_t stdout_buffer[2][BUFFER_SIZE];
-__attribute__((section(".DTCM"))) uint8_t full_size[2] = {UINT8_C(0)};
-__attribute__((section(".DTCM"))) uint8_t current_write_buffer_idx = UINT8_C(0);
+__attribute__((section(".bss.DMA_RAM_D2"))) uint8_t stdout_buffer[2][BUFFER_SIZE];
+__attribute__((section(".bss.DTCM"))) uint8_t full_size[2];
+__attribute__((section(".bss.DTCM"))) uint8_t current_write_buffer_idx;
 
 static inline void switch_buffer()
 {

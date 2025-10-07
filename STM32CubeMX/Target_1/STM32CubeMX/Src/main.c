@@ -74,7 +74,7 @@ typedef enum
 
 __attribute__((section(".DTCM"))) static InterfaceType_t current_interface = None;
 
-__attribute__((section(".DTCM"))) static uint32_t event = 0;
+__attribute__((section(".bss.DTCM"))) static uint32_t event;
 
 // MDMA链接寄存器必须双字对齐
 
