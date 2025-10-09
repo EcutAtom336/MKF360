@@ -153,7 +153,6 @@ int main(void)
     MX_USART1_UART_Init();
     MX_DAC1_Init();
     MX_TIM6_Init();
-    MX_TIM8_Init();
     /* USER CODE BEGIN 2 */
 
     mic_mdma_init();
