@@ -5,8 +5,6 @@ typedef enum
 {
     EventGroup1MicDataInterlaceComplete,
 
-    EventGroup1DacBufferReset,
-
     EventGroup1UacConnect,
     EventGroup1Disconnect,
 

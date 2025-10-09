@@ -11,33 +11,16 @@ typedef enum
 
     SpkHdstCmdEnableHdst,
     SpkHdstCmdDisableHdst,
-
-    SpkHdstCmdSpkPlay,
-    SpkHdstCmdHdstPlay,
 } SpkHdstCmd_t;
 
-typedef union {
+typedef void (*OnDacDmaFrameEmptyIsrCallback)(void *frame, const size_t sample_num);
 
-    struct
-    {
-        const int16_t *data;
-        size_t sample_num;
-    } spk_play;
+void spk_hdst_init(const OnDacDmaFrameEmptyIsrCallback cb);
 
-    struct
-    {
-        const int16_t *data;
-        size_t sample_num;
-    } hdst_play;
+void audio_dac_util_write_speaker(void *frame, const int16_t *data, const size_t sample_num);
 
-} SpkHdstCtlData_t;
+void audio_dac_util_write_headset(void *frame, const int16_t *data, const size_t sample_num);
 
-typedef void (*DacBufferResetCallback)();
-
-void spk_hdst_init();
-
-void register_dac_buffer_reset_callback(DacBufferResetCallback callback);
-
-void spk_hdst_ctl(const SpkHdstCmd_t cmd, SpkHdstCtlData_t *data);
+void spk_hdst_ctl(const SpkHdstCmd_t cmd);
 
 #endif // !__SPEAKER_HEADSET_H__
