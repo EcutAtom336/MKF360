@@ -86,7 +86,7 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
 static void on_mic_data_interlaces();
-static void on_dac_buffer_reset();
+static void on_dac_frame_empty(void *frame, const size_t sample_num);
 static void common_connect();
 static void common_disconnect();
 
@@ -153,7 +153,6 @@ int main(void)
     MX_USART1_UART_Init();
     MX_DAC1_Init();
     MX_TIM6_Init();
-    MX_TIM8_Init();
     /* USER CODE BEGIN 2 */
 
     mic_mdma_init();
@@ -163,18 +162,15 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    spk_hdst_init();
+    spk_hdst_init(on_dac_frame_empty);
 
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
     uint8_t flag = 0;
     uint32_t verify_pass_cnt = 0;
 
     register_mic_interlaced_data_ready_callback(on_mic_data_interlaces);
-    register_dac_buffer_reset_callback(on_dac_buffer_reset);
 
-    spk_hdst_ctl(SpkHdstCmdEnableSpk, NULL);
-
-    uint32_t n = 0;
+    spk_hdst_ctl(SpkHdstCmdEnableSpk);
 
     while (1)
     {
@@ -200,30 +196,6 @@ int main(void)
                 Error_Handler();
             }
             flag = flag == 0 ? 1 : 0;
-        }
-        else if (event & EVENT_BIT(EventGroup1DacBufferReset))
-        {
-            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1DacBufferReset));
-            if (n + DAC_DMA_FRAME_SAMPLE_NUM < BOOT_PCM_LEN)
-            {
-                SpkHdstCtlData_t data1 = {
-                    .spk_play =
-                        {
-                            .data = &BOOT_PCM[n],
-                            .sample_num = DAC_DMA_FRAME_SAMPLE_NUM,
-                        },
-                };
-                SpkHdstCtlData_t data2 = {
-                    .hdst_play =
-                        {
-                            .data = &BOOT_PCM[n],
-                            .sample_num = DAC_DMA_FRAME_SAMPLE_NUM,
-                        },
-                };
-                n += DAC_DMA_FRAME_SAMPLE_NUM;
-                spk_hdst_ctl(SpkHdstCmdSpkPlay, &data1);
-                spk_hdst_ctl(SpkHdstCmdHdstPlay, &data2);
-            }
         }
         else if (event & EVENT_BIT(EventGroup1UacConnect))
         {
@@ -308,6 +280,18 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+size_t n;
+static void on_dac_frame_empty(void *frame, const size_t sample_num)
+{
+    if (n + sample_num >= BOOT_PCM_LEN)
+    {
+        return;
+    }
+    audio_dac_util_write_headset(frame, &BOOT_PCM[n], sample_num);
+    audio_dac_util_write_speaker(frame, &BOOT_PCM[n], sample_num);
+    n += sample_num;
+}
 
 static void common_connect()
 {
@@ -457,11 +441,6 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
 static void on_mic_data_interlaces()
 {
     ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
-}
-
-static void on_dac_buffer_reset()
-{
-    ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1DacBufferReset));
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
