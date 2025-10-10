@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include;.\audio\include</IncludePath>
+              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include;.\audio\include;.\lib\lwrb-3.2.0\lwrb\src\include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -403,6 +403,11 @@
               <FileName>speaker_headset.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\speaker_headset.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio_iis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\audio_iis.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -473,6 +478,11 @@
               <FileName>tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2s.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\i2s.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -618,6 +628,16 @@
               <FileName>stm32h7xx_hal_dac_ex.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dac_ex.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_i2s.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_i2s.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32h7xx_hal_i2s_ex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_i2s_ex.c</FilePath>
             </File>
           </Files>
         </Group>

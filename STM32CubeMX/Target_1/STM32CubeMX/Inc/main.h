@@ -81,6 +81,11 @@ extern "C"
 #define LED2_GPIO_Port GPIOD
 #define LED1_Pin GPIO_PIN_7
 #define LED1_GPIO_Port GPIOD
+#define BT_STAT_Pin GPIO_PIN_5
+#define BT_STAT_GPIO_Port GPIOB
+#define BT_STAT_EXTI_IRQn EXTI9_5_IRQn
+#define BT_DISABLE__Pin GPIO_PIN_6
+#define BT_DISABLE__GPIO_Port GPIOB
 
     /* USER CODE BEGIN Private defines */
 

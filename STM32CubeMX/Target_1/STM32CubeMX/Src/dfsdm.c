@@ -198,16 +198,7 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *dfsdm_filterHandle)
 
         /** Initializes the peripherals clock
          */
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_DFSDM1;
-        PeriphClkInitStruct.PLL2.PLL2M = 1;
-        PeriphClkInitStruct.PLL2.PLL2N = 32;
-        PeriphClkInitStruct.PLL2.PLL2P = 5;
-        PeriphClkInitStruct.PLL2.PLL2Q = 2;
-        PeriphClkInitStruct.PLL2.PLL2R = 5;
-        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
-        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-        PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
+        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_DFSDM1;
         PeriphClkInitStruct.Dfsdm1ClockSelection = RCC_DFSDM1CLKSOURCE_D2PCLK1;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
         {
@@ -365,16 +356,7 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef *dfsdm_channelHandle)
 
         /** Initializes the peripherals clock
          */
-        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_DFSDM1;
-        PeriphClkInitStruct.PLL2.PLL2M = 1;
-        PeriphClkInitStruct.PLL2.PLL2N = 32;
-        PeriphClkInitStruct.PLL2.PLL2P = 5;
-        PeriphClkInitStruct.PLL2.PLL2Q = 2;
-        PeriphClkInitStruct.PLL2.PLL2R = 5;
-        PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
-        PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-        PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-        PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
+        PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_DFSDM1;
         PeriphClkInitStruct.Dfsdm1ClockSelection = RCC_DFSDM1CLKSOURCE_D2PCLK1;
         if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
         {

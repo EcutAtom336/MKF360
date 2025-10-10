@@ -18,6 +18,7 @@ generator-import:
         - file: ./STM32CubeMX/Src/dac.c
         - file: ./STM32CubeMX/Src/dfsdm.c
         - file: ./STM32CubeMX/Src/dma.c
+        - file: ./STM32CubeMX/Src/i2s.c
         - file: ./STM32CubeMX/Src/mdma.c
         - file: ./STM32CubeMX/Src/quadspi.c
         - file: ./STM32CubeMX/Src/tim.c
@@ -47,6 +48,8 @@ generator-import:
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dfsdm.c
+        - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2s.c
+        - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2s_ex.c
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_delayblock.c
         - file: ./STM32CubeMX/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c
