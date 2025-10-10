@@ -1,4 +1,4 @@
-#include "User/speaker_headset.h"
+#include "User/audio_dac.h"
 
 #include <stdio.h>
 
@@ -35,7 +35,7 @@ __attribute__((section(".DTCM"))) uint32_t flags;
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx);
 
-void spk_hdst_init(const OnDacDmaFrameEmptyIsrCallback isr_cb)
+void audio_dac_init(const OnDacDmaFrameEmptyIsrCallback isr_cb)
 {
     if (isr_cb == NULL)
     {
@@ -78,54 +78,52 @@ static void dac_stop()
     ATOMIC_CLEAR_BIT(flags, DAC_START_FLAG);
 }
 
-void spk_hdst_ctl(const SpkHdstCmd_t cmd)
+void audio_dac_ctl(const AudioDacCmd_t cmd)
 {
-    if ((cmd == SpkHdstCmdEnableSpk || cmd == SpkHdstCmdEnableHdst) && !IS_DAC_STARTED())
+    if ((cmd == AudioDacCmdEnableCh1 || cmd == AudioDacCmdEnableCh2) && !IS_DAC_STARTED())
     {
         dac_start();
     }
     switch (cmd)
     {
-    case SpkHdstCmdEnableSpk: {
-        // HAL_GPIO_WritePin(SPEAKER_EN_GPIO_Port, SPEAKER_EN_Pin, GPIO_PIN_SET);
+    case AudioDacCmdEnableCh1: {
         ATOMIC_SET_BIT(flags, SPK_ENABLE_FLAG);
         break;
     }
-    case SpkHdstCmdDisableSpk: {
-        // HAL_GPIO_WritePin(SPEAKER_EN_GPIO_Port, SPEAKER_EN_Pin, GPIO_PIN_RESET);
+    case AudioDacCmdDisableCh1: {
         ATOMIC_CLEAR_BIT(flags, SPK_ENABLE_FLAG);
         break;
     }
-    case SpkHdstCmdEnableHdst: {
-        // HAL_GPIO_WritePin(HEADSET_OUT_EN_GPIO_Port, HEADSET_OUT_EN_Pin, GPIO_PIN_SET);
+    case AudioDacCmdEnableCh2: {
         ATOMIC_SET_BIT(flags, HDST_ENABLE_FLAG);
         break;
     }
-    case SpkHdstCmdDisableHdst: {
-        // HAL_GPIO_WritePin(HEADSET_OUT_EN_GPIO_Port, HEADSET_OUT_EN_Pin, GPIO_PIN_RESET);
+    case AudioDacCmdDisableCh2: {
         ATOMIC_CLEAR_BIT(flags, HDST_ENABLE_FLAG);
         break;
     }
     }
-    if ((cmd == SpkHdstCmdDisableSpk || cmd == SpkHdstCmdDisableHdst) && IS_DAC_STARTED())
+    if ((cmd == AudioDacCmdDisableCh1 || cmd == AudioDacCmdDisableCh2) && IS_DAC_STARTED())
     {
         dac_stop();
     }
 }
 
-void audio_dac_util_write_speaker(void *frame, const int16_t *data, const size_t sample_num)
+void audio_dac_util_write_ch(void *frame, const int16_t *data, const size_t sample_num, const DacCh_t ch)
 {
-    for (size_t i = 0; i < sample_num; ++i)
+    if (ch == DacCh1)
     {
-        ((DacFrame_t *)frame)[i].ch1 = (uint16_t)((int32_t)data[i] + 32768U);
+        for (size_t i = 0; i < sample_num; ++i)
+        {
+            ((DacFrame_t *)frame)[i].ch1 = (uint16_t)((int32_t)data[i] + 32768U);
+        }
     }
-}
-
-void audio_dac_util_write_headset(void *frame, const int16_t *data, const size_t sample_num)
-{
-    for (size_t i = 0; i < sample_num; ++i)
+    else if (ch == DacCh2)
     {
-        ((DacFrame_t *)frame)[i].ch2 = (uint16_t)((int32_t)data[i] + 32768U);
+        for (size_t i = 0; i < sample_num; ++i)
+        {
+            ((DacFrame_t *)frame)[i].ch2 = (uint16_t)((int32_t)data[i] + 32768U);
+        }
     }
 }
 

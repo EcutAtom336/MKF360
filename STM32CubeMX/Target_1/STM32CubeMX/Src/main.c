@@ -38,9 +38,9 @@
 #include "usbd_core.h"
 
 #include "MKF360_config.h"
+#include "User/audio_dac.h"
 #include "User/audio_iis.h"
 #include "User/mic.h"
-#include "User/speaker_headset.h"
 #include "User/usb_desc.h"
 #include "audio/PCM_RES.h"
 #include "mdma.h"
@@ -172,7 +172,7 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    spk_hdst_init(on_dac_frame_empty);
+    audio_dac_init(on_dac_frame_empty);
 
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
     uint8_t flag = 0;
@@ -180,7 +180,7 @@ int main(void)
 
     register_mic_interlaced_data_ready_callback(on_mic_data_interlaces);
 
-    spk_hdst_ctl(SpkHdstCmdEnableSpk);
+    audio_dac_ctl(AudioDacCmdEnableCh1);
 
     while (1)
     {
@@ -325,8 +325,8 @@ static void on_dac_frame_empty(void *frame, const size_t sample_num)
     {
         return;
     }
-    audio_dac_util_write_headset(frame, &BOOT_PCM[n], sample_num);
-    audio_dac_util_write_speaker(frame, &BOOT_PCM[n], sample_num);
+    audio_dac_util_write_ch(frame, &BOOT_PCM[n], sample_num, DacCh1);
+    audio_dac_util_write_ch(frame, &BOOT_PCM[n], sample_num, DacCh2);
     n += sample_num;
 }
 

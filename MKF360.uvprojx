@@ -400,14 +400,14 @@
               <FilePath>.\User\mic.c</FilePath>
             </File>
             <File>
-              <FileName>speaker_headset.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\speaker_headset.c</FilePath>
-            </File>
-            <File>
               <FileName>audio_iis.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\audio_iis.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio_dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\audio_dac.c</FilePath>
             </File>
           </Files>
         </Group>
