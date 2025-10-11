@@ -89,7 +89,7 @@ static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
 static void on_mic_data_interlaces();
-static void on_dac_frame_empty(void *frame, const size_t sample_num);
+static void on_dac_buffer_empty(void *frame, const size_t sample_num);
 static void common_connect();
 static void common_disconnect();
 
@@ -172,7 +172,7 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    audio_dac_init(on_dac_frame_empty);
+    audio_dac_register_on_dac_dma_buffer_empty_isr_callback(on_dac_buffer_empty);
 
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
     uint8_t flag = 0;
@@ -319,14 +319,14 @@ void PeriphCommonClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 size_t n;
-static void on_dac_frame_empty(void *frame, const size_t sample_num)
+static void on_dac_buffer_empty(void *frames, const size_t sample_num)
 {
     if (n + sample_num >= BOOT_PCM_LEN)
     {
         return;
     }
-    audio_dac_util_write_ch(frame, &BOOT_PCM[n], sample_num, DacCh1);
-    audio_dac_util_write_ch(frame, &BOOT_PCM[n], sample_num, DacCh2);
+    audio_dac_util_write_ch(frames, &BOOT_PCM[n], sample_num, DacCh1);
+    audio_dac_util_write_ch(frames, &BOOT_PCM[n], sample_num, DacCh2);
     n += sample_num;
 }
 

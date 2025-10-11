@@ -29,13 +29,13 @@ typedef struct
 __attribute__((section(".DMA_RAM_D2")))
 __attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".DTCM"))) OnDacDmaFrameEmptyIsrCallback isr_callback;
+__attribute__((section(".DTCM"))) OnDacDmaBufferEmptyIsrCallback isr_callback;
 
 __attribute__((section(".DTCM"))) uint32_t flags;
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx);
 
-void audio_dac_init(const OnDacDmaFrameEmptyIsrCallback isr_cb)
+void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback isr_cb)
 {
     if (isr_cb == NULL)
     {
@@ -109,20 +109,20 @@ void audio_dac_ctl(const AudioDacCmd_t cmd)
     }
 }
 
-void audio_dac_util_write_ch(void *frame, const int16_t *data, const size_t sample_num, const DacCh_t ch)
+void audio_dac_util_write_ch(void *frames, const int16_t *data, const size_t sample_num, const DacCh_t ch)
 {
     if (ch == DacCh1)
     {
         for (size_t i = 0; i < sample_num; ++i)
         {
-            ((DacFrame_t *)frame)[i].ch1 = (uint16_t)((int32_t)data[i] + 32768U);
+            ((DacFrame_t *)frames)[i].ch1 = (uint16_t)((int32_t)data[i] + 32768U);
         }
     }
     else if (ch == DacCh2)
     {
         for (size_t i = 0; i < sample_num; ++i)
         {
-            ((DacFrame_t *)frame)[i].ch2 = (uint16_t)((int32_t)data[i] + 32768U);
+            ((DacFrame_t *)frames)[i].ch2 = (uint16_t)((int32_t)data[i] + 32768U);
         }
     }
 }
