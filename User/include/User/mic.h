@@ -2,21 +2,29 @@
 #define __MIC_H__
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "MKF360_config.h"
 
-typedef void (*MicInterlacedDataReadyCallback)();
+/** @typedef MicInterlacedDataReadyIsrCallback */
+/**
+ * @brief Mic 数据交错完成回调，在 MDMA 中断中调用。
+ *
+ * @note 中断环境回调。
+ *
+ * @param buffer Mic 交错数据地址。
+ * @param sample_num 数据数量。
+ */
+typedef void (*MicInterlacedDataReadyIsrCallback)(const int16_t *buffer, const size_t sample_num);
 
 void mic_mdma_init();
 
-void register_mic_interlaced_data_ready_callback(MicInterlacedDataReadyCallback callback);
+void register_mic_interlaced_data_ready_callback(MicInterlacedDataReadyIsrCallback callback);
 
 void mic_start();
 
 void mic_stop();
-
-void mic_interlaced_data_read(int16_t *const buffer);
 
 bool mic_verify_interlaced_data();
 

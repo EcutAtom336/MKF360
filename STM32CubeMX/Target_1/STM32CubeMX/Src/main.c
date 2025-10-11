@@ -88,7 +88,7 @@ void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void on_mic_data_interlaces();
+static void on_mic_interlaced_data_ready();
 static void on_dac_buffer_empty(void *frame, const size_t sample_num);
 static void common_connect();
 static void common_disconnect();
@@ -178,7 +178,7 @@ int main(void)
     uint8_t flag = 0;
     uint32_t verify_pass_cnt = 0;
 
-    register_mic_interlaced_data_ready_callback(on_mic_data_interlaces);
+    register_mic_interlaced_data_ready_callback(on_mic_interlaced_data_ready);
 
     audio_dac_ctl(AudioDacCmdEnableCh1);
 
@@ -475,7 +475,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
     }
 }
 
-static void on_mic_data_interlaces()
+static void on_mic_interlaced_data_ready()
 {
     ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
 }

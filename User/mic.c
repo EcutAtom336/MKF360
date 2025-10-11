@@ -22,7 +22,7 @@ __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_
 __attribute__((section(".bss.DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DTCM"))) static uint8_t mic_data_interlaced_from;
 
-__attribute__((section(".bss.DTCM"))) static MicInterlacedDataReadyCallback mic_interlaced_data_ready_callback;
+__attribute__((section(".bss.DTCM"))) static MicInterlacedDataReadyIsrCallback mic_interlaced_data_ready_callback;
 
 static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
 {
@@ -37,7 +37,7 @@ static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
     }
     if (mic_interlaced_data_ready_callback != NULL)
     {
-        mic_interlaced_data_ready_callback();
+        mic_interlaced_data_ready_callback(&mic_data_interlaced[0], DFSDM_DMA_FRAME_SAMPLE_NUM * 4U);
     }
 }
 
@@ -181,7 +181,7 @@ void mic_mdma_init()
     HAL_MDMA_RegisterCallback(&hmdma_mdma_channel1_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, mic_data_interlace_complete);
 }
 
-void register_mic_interlaced_data_ready_callback(MicInterlacedDataReadyCallback callback)
+void register_mic_interlaced_data_ready_callback(MicInterlacedDataReadyIsrCallback callback)
 {
     mic_interlaced_data_ready_callback = callback;
 }
@@ -226,11 +226,6 @@ void mic_stop()
             Error_Handler();
         }
     }
-}
-
-void mic_interlaced_data_read(int16_t *const buffer)
-{
-    arm_copy_q15(&mic_data_interlaced[0], buffer, DFSDM_DMA_FRAME_SAMPLE_NUM * 4);
 }
 
 bool mic_verify_interlaced_data()
