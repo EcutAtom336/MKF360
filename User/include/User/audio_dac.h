@@ -32,9 +32,9 @@ typedef enum
  *               建议使用 @see audio_dac_util_write_ch 写入。
  * @param sample_num 缓冲可容纳的数据个数。
  */
-typedef void (*OnDacDmaBufferEmptyIsrCallback)(void *buffer, const size_t sample_num);
+typedef void (*OnDacDmaBufferEmptyIsrCallback_t)(void *buffer, const size_t sample_num);
 
-void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback cb);
+void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback_t cb);
 
 /**
  * @brief 写入 DAC DMA 缓冲区工具函数。

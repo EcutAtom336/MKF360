@@ -29,13 +29,13 @@ typedef struct
 __attribute__((section(".DMA_RAM_D2")))
 __attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".DTCM"))) OnDacDmaBufferEmptyIsrCallback isr_callback;
+__attribute__((section(".DTCM"))) OnDacDmaBufferEmptyIsrCallback_t isr_callback;
 
 __attribute__((section(".DTCM"))) uint32_t flags;
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx);
 
-void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback isr_cb)
+void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback_t isr_cb)
 {
     if (isr_cb == NULL)
     {

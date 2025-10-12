@@ -9,9 +9,9 @@
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t iis_tx_dma_buffer[2][IIS_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t iis_rx_dma_buffer[2][IIS_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".bss.DTCM"))) static OnIisDmaBufferReadyIsrCallback isr_callback;
+__attribute__((section(".bss.DTCM"))) static OnIisDmaBufferReadyIsrCallback_t isr_callback;
 
-void audio_iis_register_on_dma_buffer_ready_isr_callback(const OnIisDmaBufferReadyIsrCallback isr_cb)
+void audio_iis_register_on_dma_buffer_ready_isr_callback(const OnIisDmaBufferReadyIsrCallback_t isr_cb)
 {
     isr_callback = isr_cb;
 }

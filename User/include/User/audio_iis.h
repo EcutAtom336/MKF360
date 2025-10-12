@@ -16,9 +16,9 @@
  * @param tx_buffer IIS 发送数据 DMA 缓冲区。在这写入要发送的数据。
  * @param sample_num 缓冲区数据量（以数据个数为单位）。
  */
-typedef void (*OnIisDmaBufferReadyIsrCallback)(int16_t *rx_buffer, int16_t *tx_buffer, const size_t sample_num);
+typedef void (*OnIisDmaBufferReadyIsrCallback_t)(int16_t *rx_buffer, int16_t *tx_buffer, const size_t sample_num);
 
-void audio_iis_register_on_dma_buffer_ready_isr_callback(const OnIisDmaBufferReadyIsrCallback isr_cb);
+void audio_iis_register_on_dma_buffer_ready_isr_callback(const OnIisDmaBufferReadyIsrCallback_t isr_cb);
 
 void iis_start();
 
