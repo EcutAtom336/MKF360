@@ -55,7 +55,7 @@ static void dac_start()
     {
         Error_Handler();
     }
-    ret_hal = HAL_TIM_Base_Start(&htim6);
+    ret_hal = HAL_TIM_Base_Start(&htim7);
     if (ret_hal != HAL_OK)
     {
         Error_Handler();
@@ -65,7 +65,7 @@ static void dac_start()
 
 static void dac_stop()
 {
-    HAL_StatusTypeDef ret_hal = HAL_TIM_Base_Stop(&htim6);
+    HAL_StatusTypeDef ret_hal = HAL_TIM_Base_Stop(&htim7);
     if (ret_hal != HAL_OK)
     {
         Error_Handler();
