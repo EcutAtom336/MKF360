@@ -496,6 +496,16 @@ static void on_mic_interlaced_data_ready()
     ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    // CherryUSB不支持USB disconnect事件触发，
+    // 使用VBUS下降沿触发USB disconnect
+    if (GPIO_Pin == VBUS_DETECT_Pin)
+    {
+        on_disconnect();
+    }
+}
+
 /* USER CODE END 4 */
 
 /* MPU Configuration */
