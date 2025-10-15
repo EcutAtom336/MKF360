@@ -223,6 +223,14 @@ int main(void)
         {
             ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1Disconnect));
             common_disconnect();
+            // CherryUSB 无法检测断开连接，
+            // 导致断开连接时重复触发挂起事件，
+            // 重新初始化协议栈
+            if (current_interface == Usb)
+            {
+                usbd_deinitialize(0);
+                usb_init(0, USB_OTG_FS_PERIPH_BASE);
+            }
             current_interface = None;
             printf("USB disconnect.\n");
         }
