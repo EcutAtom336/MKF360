@@ -214,7 +214,7 @@ void SysTick_Handler(void)
 {
     /* USER CODE BEGIN SysTick_IRQn 0 */
 
-    period_event_generator();
+    period_event_tick();
 
     /* USER CODE END SysTick_IRQn 0 */
     HAL_IncTick();

@@ -39,13 +39,12 @@
 
 #include "usbd_core.h"
 
-#include "MKF360_config.h"
 #include "User/audio_dac.h"
 #include "User/audio_iis.h"
+#include "User/event_group.h"
 #include "User/mic.h"
 #include "User/usb_desc.h"
 #include "audio/PCM_RES.h"
-#include "mdma.h"
 
 /* USER CODE END Includes */
 
@@ -77,8 +76,6 @@ typedef enum
 /* USER CODE BEGIN PV */
 
 __attribute__((section(".DTCM"))) static InterfaceType_t current_interface = None;
-
-__attribute__((section(".bss.DTCM"))) static uint32_t event;
 
 // MDMA链接寄存器必须双字对齐
 
@@ -193,9 +190,8 @@ int main(void)
 
         /* USER CODE BEGIN 3 */
 
-        if (event & EVENT_BIT(EventGroup1MicDataInterlaceComplete))
+        if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
         {
-            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
             // 验证Mic data被MDMA正确交错
             if (mic_verify_interlaced_data())
             {
@@ -212,16 +208,14 @@ int main(void)
             }
             flag = flag == 0 ? 1 : 0;
         }
-        else if (event & EVENT_BIT(EventGroup1UacConnect))
+        else if (event_group_check_event(EventGroup1, EventGroup1UacConnect, true))
         {
-            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1UacConnect));
             common_connect();
             current_interface = Usb;
             printf("USB connect.\n");
         }
-        else if (event & EVENT_BIT(EventGroup1Disconnect))
+        else if (event_group_check_event(EventGroup1, EventGroup1Disconnect, true))
         {
-            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1Disconnect));
             common_disconnect();
             // CherryUSB 无法检测断开连接，
             // 导致断开连接时重复触发挂起事件，
@@ -234,9 +228,8 @@ int main(void)
             current_interface = None;
             printf("USB disconnect.\n");
         }
-        else if (event & EVENT_BIT(EventGroup1Tick500Pass))
+        else if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {
-            ATOMIC_CLEAR_BIT(event, EVENT_BIT(EventGroup1Tick500Pass));
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
         }
     }
@@ -366,29 +359,29 @@ static void common_disconnect()
 
 void on_uac_connect()
 {
-    ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1UacConnect));
+    event_group_set_event(EventGroup1, EventGroup1UacConnect);
 }
 
 void on_disconnect()
 {
     if (current_interface == Usb)
     {
-        ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1Disconnect));
+        event_group_set_event(EventGroup1, EventGroup1Disconnect);
     }
 }
 
-void period_event_generator()
+void period_event_tick()
 {
     static size_t last_tick[] = {0U};
     const size_t interval_tick[] = {500U};
-    const uint32_t event_bit[] = {EVENT_BIT(EventGroup1Tick500Pass)};
+    const uint32_t event_bit[] = {EventGroup1Tick500Pass};
     size_t tick = HAL_GetTick();
     for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
     {
         if (IS_OUT_OF_DATE(tick, last_tick[i], interval_tick[i]))
         {
             last_tick[i] = tick;
-            ATOMIC_SET_BIT(event, event_bit[i]);
+            event_group_set_event(EventGroup1, event_bit[i]);
         }
     }
 }
@@ -501,7 +494,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
 
 static void on_mic_interlaced_data_ready()
 {
-    ATOMIC_SET_BIT(event, EVENT_BIT(EventGroup1MicDataInterlaceComplete));
+    event_group_set_event(EventGroup1, EventGroup1MicDataInterlaced);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)

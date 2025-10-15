@@ -414,6 +414,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\audio_adc.c</FilePath>
             </File>
+            <File>
+              <FileName>event_group.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\event_group.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
