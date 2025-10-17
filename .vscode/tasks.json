@@ -15,7 +15,38 @@
         {
             "label": "Generate compile_commands.json",
             "type": "shell",
-            "command": "MDK_parser.exe --mdk-path C:/Users/ZhuJiatao/AppData/Local/Keil_v5 --project-path ${workspaceFolder} --project-name MKF360 --target-name Target_1",
+            "command": "MDK_parser.exe",
+            "args": [
+                "--root",
+                "${workspaceFolder}",
+                "--dep-file",
+                "Objects/MKF360_Target_1.dep",
+                "--compile-commands-out-path",
+                ".",
+                "--compiler-exe",
+                "${env:ARMCLANG_HOME}/bin/armclang.exe",
+                "--compiler-include-dir",
+                "${env:ARMCLANG_HOME}/include",
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Strat compile_commands.json generator monitor mode",
+            "type": "shell",
+            "command": "MDK_parser.exe",
+            "args": [
+                "--root",
+                "${workspaceFolder}",
+                "--dep-file",
+                "Objects/MKF360_Target_1.dep",
+                "--compile-commands-out-path",
+                ".",
+                "--compiler-exe",
+                "${env:ARMCLANG_HOME}/bin/armclang.exe",
+                "--compiler-include-dir",
+                "${env:ARMCLANG_HOME}/include",
+                "--monitor-mode"
+            ],
             "problemMatcher": []
         }
     ]
