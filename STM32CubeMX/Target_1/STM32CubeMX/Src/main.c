@@ -43,6 +43,7 @@
 #include "User/audio_iis.h"
 #include "User/event_group.h"
 #include "User/mic.h"
+#include "User/retarget.h"
 #include "User/usb_desc.h"
 #include "audio/PCM_RES.h"
 
@@ -228,6 +229,10 @@ int main(void)
             current_interface = None;
             printf("USB disconnect.\n");
         }
+        else if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
+        {
+            flush_stdout();
+        }
         else if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
@@ -372,9 +377,9 @@ void on_disconnect()
 
 void period_event_tick()
 {
-    static size_t last_tick[] = {0U};
-    const size_t interval_tick[] = {500U};
-    const uint32_t event_bit[] = {EventGroup1Tick500Pass};
+    static size_t last_tick[] = {0U, 0U};
+    const size_t interval_tick[] = {50U, 500U};
+    const uint32_t event_bit[] = {EventGroup1Tick50Pass, EventGroup1Tick500Pass};
     size_t tick = HAL_GetTick();
     for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
     {

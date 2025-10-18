@@ -17,6 +17,8 @@ typedef enum
     EventGroup1DacBufferReset,
     EventGroup1UacConnect,
     EventGroup1Disconnect,
+
+    EventGroup1Tick50Pass,
     EventGroup1Tick500Pass,
 } EventGroupEventIndex_t;
 
