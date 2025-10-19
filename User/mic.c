@@ -8,6 +8,7 @@
 #include "stm32h7xx_hal.h"
 
 #include "MKF360_config.h"
+#include "User/event_group.h"
 #include "dfsdm.h"
 #include "mdma.h"
 
@@ -22,8 +23,6 @@ __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_
 __attribute__((section(".bss.DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DTCM"))) static uint8_t mic_data_interlaced_from;
 
-__attribute__((section(".bss.DTCM"))) static MicInterlacedDataReadyIsrCallback mic_interlaced_data_ready_callback;
-
 static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
 {
     (void)hmdma;
@@ -35,9 +34,10 @@ static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
     {
         mic_data_interlaced_from = 1;
     }
-    if (mic_interlaced_data_ready_callback != NULL)
+    bool before = event_group_set_event(EventGroup1, EventGroup1MicDataInterlaced);
+    if (before)
     {
-        mic_interlaced_data_ready_callback(&mic_data_interlaced[0], DFSDM_DMA_FRAME_SAMPLE_NUM * 4U);
+        Error_Handler();
     }
 }
 
@@ -181,11 +181,6 @@ void mic_mdma_init()
     HAL_MDMA_RegisterCallback(&hmdma_mdma_channel1_sw_0, HAL_MDMA_XFER_CPLT_CB_ID, mic_data_interlace_complete);
 }
 
-void register_mic_interlaced_data_ready_callback(MicInterlacedDataReadyIsrCallback callback)
-{
-    mic_interlaced_data_ready_callback = callback;
-}
-
 void mic_start()
 {
     HAL_StatusTypeDef ret_hal = HAL_OK;
@@ -241,6 +236,16 @@ bool mic_verify_interlaced_data()
         }
     }
     return true;
+}
+
+void mic_interlace_data_read(int16_t *buffer)
+{
+    arm_copy_q15(&mic_data_interlaced[0], buffer, DFSDM_DMA_FRAME_SAMPLE_NUM * 4U);
+}
+
+int16_t *get_mic_interlaces_data_address()
+{
+    return &mic_data_interlaced[0];
 }
 
 static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, const uint8_t idx)

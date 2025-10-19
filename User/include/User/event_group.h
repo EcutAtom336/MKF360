@@ -14,7 +14,11 @@ typedef enum
 typedef enum
 {
     EventGroup1MicDataInterlaced,
-    EventGroup1DacBufferReset,
+
+    EventGroup1DacDmaBufferReady,
+    EventGroup1IisDmaBufferReady,
+    EventGroup1Adc3DmaBufferReady,
+
     EventGroup1UacConnect,
     EventGroup1Disconnect,
 
@@ -22,7 +26,7 @@ typedef enum
     EventGroup1Tick500Pass,
 } EventGroupEventIndex_t;
 
-void event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx);
+bool event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx);
 
 bool event_group_check_event(const EventGroupIndex_t group_idx, const uint8_t event_idx, const bool clean_if_set);
 

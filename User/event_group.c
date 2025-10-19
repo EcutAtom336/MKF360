@@ -6,9 +6,11 @@
 
 __attribute__((section(".bss.DTCM"))) uint32_t event_groups[EventGroupNum];
 
-void event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx)
+bool event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx)
 {
+    bool before = event_group_check_event(group_idx, event_idx, false);
     ATOMIC_SET_BIT(event_groups[group_idx], (1U << event_idx));
+    return before;
 }
 
 bool event_group_check_event(const EventGroupIndex_t group_idx, const uint8_t event_idx, const bool clean_if_set)

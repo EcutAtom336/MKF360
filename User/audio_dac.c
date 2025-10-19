@@ -6,16 +6,15 @@
 #include "stm32h7xx_hal.h"
 
 #include "MKF360_config.h"
+#include "User/event_group.h"
 #include "dac.h"
 #include "main.h"
 #include "tim.h"
 
-#define INIT_FLAG (1U << 0U)
-#define DAC_START_FLAG (1U << 1U)
-#define SPK_ENABLE_FLAG (1U << 2U)
-#define HDST_ENABLE_FLAG (1U << 3U)
+#define DAC_START_FLAG (1U << 0U)
+#define SPK_ENABLE_FLAG (1U << 1U)
+#define HDST_ENABLE_FLAG (1U << 2U)
 
-#define IS_INIT() (flag & INIT_FLAG)
 #define IS_DAC_STARTED() (flags & DAC_START_FLAG)
 #define IS_SPK_ENABLE() (flags & SPK_ENABLE_FLAG)
 #define IS_HDST_ENABLE() (flags & HDST_ENABLE_FLAG)
@@ -29,22 +28,10 @@ typedef struct
 __attribute__((section(".DMA_RAM_D2")))
 __attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".DTCM"))) OnDacDmaBufferEmptyIsrCallback_t isr_callback;
-
 __attribute__((section(".DTCM"))) uint32_t flags;
+__attribute__((section(".DTCM"))) static uint32_t idle_buffer;
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx);
-
-void audio_dac_register_on_dac_dma_buffer_empty_isr_callback(const OnDacDmaBufferEmptyIsrCallback_t isr_cb)
-{
-    if (isr_cb == NULL)
-    {
-        Error_Handler();
-    }
-    isr_callback = isr_cb;
-
-    flags |= INIT_FLAG;
-}
 
 static void dac_start()
 {
@@ -61,6 +48,7 @@ static void dac_start()
         Error_Handler();
     }
     ATOMIC_SET_BIT(flags, DAC_START_FLAG);
+    idle_buffer = 1U;
 }
 
 static void dac_stop()
@@ -109,20 +97,20 @@ void audio_dac_ctl(const AudioDacCmd_t cmd)
     }
 }
 
-void audio_dac_util_write_ch(void *frames, const int16_t *data, const size_t sample_num, const DacCh_t ch)
+void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
 {
     if (ch == DacCh1)
     {
-        for (size_t i = 0; i < sample_num; ++i)
+        for (size_t i = 0; i < DAC_DMA_FRAME_SAMPLE_NUM; ++i)
         {
-            ((DacFrame_t *)frames)[i].ch1 = (uint16_t)((int32_t)data[i] + 32768U);
+            ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch1 = (uint16_t)((int32_t)data[i] + 32768U);
         }
     }
     else if (ch == DacCh2)
     {
-        for (size_t i = 0; i < sample_num; ++i)
+        for (size_t i = 0; i < DAC_DMA_FRAME_SAMPLE_NUM; ++i)
         {
-            ((DacFrame_t *)frames)[i].ch2 = (uint16_t)((int32_t)data[i] + 32768U);
+            ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch2 = (uint16_t)((int32_t)data[i] + 32768U);
         }
     }
 }
@@ -141,13 +129,11 @@ void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx)
 {
+    idle_buffer = dma_frame_idx == 0U ? 1U : 0U;
     arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[dma_frame_idx][0], DAC_DMA_FRAME_SAMPLE_NUM);
-    if (IS_SPK_ENABLE())
+    bool before = event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
+    if (before)
     {
-        isr_callback(&dac_dma_buffer[dma_frame_idx][0], DAC_DMA_FRAME_SAMPLE_NUM);
-    }
-    if (IS_HDST_ENABLE())
-    {
-        isr_callback(&dac_dma_buffer[dma_frame_idx][0], DAC_DMA_FRAME_SAMPLE_NUM);
+        Error_Handler();
     }
 }

@@ -88,8 +88,6 @@ void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void on_mic_interlaced_data_ready();
-static void on_dac_buffer_empty(void *frame, const size_t sample_num);
 static void common_connect();
 static void common_disconnect();
 
@@ -175,15 +173,13 @@ int main(void)
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    audio_dac_register_on_dac_dma_buffer_empty_isr_callback(on_dac_buffer_empty);
-
     usb_init(0, USB_OTG_FS_PERIPH_BASE);
     uint8_t flag = 0;
     uint32_t verify_pass_cnt = 0;
 
-    register_mic_interlaced_data_ready_callback(on_mic_interlaced_data_ready);
-
     audio_dac_ctl(AudioDacCmdEnableCh1);
+
+    size_t n = 0;
 
     while (1)
     {
@@ -208,6 +204,22 @@ int main(void)
                 Error_Handler();
             }
             flag = flag == 0 ? 1 : 0;
+        }
+        else if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
+        {
+            if (n + DAC_DMA_FRAME_SAMPLE_NUM >= BOOT_PCM_LEN)
+            {
+                continue;
+            }
+            audio_dac_write_ch(&BOOT_PCM[n], DacCh1);
+            audio_dac_write_ch(&BOOT_PCM[n], DacCh2);
+            n += DAC_DMA_FRAME_SAMPLE_NUM;
+        }
+        else if (event_group_check_event(EventGroup1, EventGroup1IisDmaBufferReady, true))
+        {
+        }
+        else if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
+        {
         }
         else if (event_group_check_event(EventGroup1, EventGroup1UacConnect, true))
         {
@@ -339,18 +351,6 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-size_t n;
-static void on_dac_buffer_empty(void *frames, const size_t sample_num)
-{
-    if (n + sample_num >= BOOT_PCM_LEN)
-    {
-        return;
-    }
-    audio_dac_util_write_ch(frames, &BOOT_PCM[n], sample_num, DacCh1);
-    audio_dac_util_write_ch(frames, &BOOT_PCM[n], sample_num, DacCh2);
-    n += sample_num;
-}
 
 static void common_connect()
 {
@@ -495,11 +495,6 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
 
         /* USER CODE END USB_OTG_FS_MspDeInit 1 */
     }
-}
-
-static void on_mic_interlaced_data_ready()
-{
-    event_group_set_event(EventGroup1, EventGroup1MicDataInterlaced);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
