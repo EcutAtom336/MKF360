@@ -26,9 +26,9 @@ typedef struct
 } DacFrame_t;
 
 __attribute__((section(".DMA_RAM_D2")))
-__attribute__((aligned(1024))) uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
+__attribute__((aligned(1024))) static uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".DTCM"))) uint32_t flags;
+__attribute__((section(".DTCM"))) static uint32_t flags;
 __attribute__((section(".DTCM"))) static uint32_t idle_buffer;
 
 static inline void dac_irq_handler(const uint8_t dma_frame_idx);

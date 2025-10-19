@@ -9,7 +9,7 @@
 #include "adc.h"
 #include "tim.h"
 
-__attribute__((section(".bss.BDMA_RAM_D3"))) int16_t adc3_dma_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM];
+__attribute__((section(".bss.BDMA_RAM_D3"))) static int16_t adc3_dma_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DTCM"))) static uint32_t idle_buffer;
 
 void audio_adc_start()
