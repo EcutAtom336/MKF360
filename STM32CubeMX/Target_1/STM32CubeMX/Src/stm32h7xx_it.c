@@ -23,8 +23,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include <stdlib.h>
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -168,12 +166,6 @@ void UsageFault_Handler(void)
 void SVC_Handler(void)
 {
     /* USER CODE BEGIN SVCall_IRQn 0 */
-
-    __asm volatile("TST lr, #4\n"
-                   "ITE EQ\n"
-                   "MRSEQ r0, MSP\n"
-                   "MRSNE r0, PSP\n"
-                   "B mkf360_svc_handler\n");
 
     /* USER CODE END SVCall_IRQn 0 */
     /* USER CODE BEGIN SVCall_IRQn 1 */

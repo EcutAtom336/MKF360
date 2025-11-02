@@ -11,13 +11,13 @@
 #include "main.h"
 #include "tim.h"
 
-#define DAC_START_FLAG (1U << 0U)
-#define SPK_ENABLE_FLAG (1U << 1U)
-#define HDST_ENABLE_FLAG (1U << 2U)
+#define DAC_STARTED_FLAG (1U << 0U)
+#define CH1_ENABLED_FLAG (1U << 1U)
+#define CH2_ENABLED_FLAG (1U << 2U)
 
-#define IS_DAC_STARTED() (flags & DAC_START_FLAG)
-#define IS_SPK_ENABLE() (flags & SPK_ENABLE_FLAG)
-#define IS_HDST_ENABLE() (flags & HDST_ENABLE_FLAG)
+#define IS_DAC_STARTED() (flags & DAC_STARTED_FLAG)
+#define IS_CH1_ENABLED() (flags & CH1_ENABLED_FLAG)
+#define IS_CH2_ENABLED() (flags & CH2_ENABLED_FLAG)
 
 typedef struct
 {
@@ -25,13 +25,11 @@ typedef struct
     uint16_t ch2;
 } DacFrame_t;
 
-__attribute__((section(".DMA_RAM_D2")))
+__attribute__((section(".bss.DMA_RAM_D2")))
 __attribute__((aligned(1024))) static uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".DTCM"))) static uint32_t flags;
-__attribute__((section(".DTCM"))) static uint32_t idle_buffer;
-
-static inline void dac_irq_handler(const uint8_t dma_frame_idx);
+__attribute__((section(".bss.DTCM"))) static uint32_t flags;
+__attribute__((section(".bss.DTCM"))) static uint32_t idle_buffer;
 
 static void dac_start()
 {
@@ -47,7 +45,7 @@ static void dac_start()
     {
         Error_Handler();
     }
-    ATOMIC_SET_BIT(flags, DAC_START_FLAG);
+    ATOMIC_SET_BIT(flags, DAC_STARTED_FLAG);
     idle_buffer = 1U;
 }
 
@@ -63,7 +61,7 @@ static void dac_stop()
     {
         Error_Handler();
     }
-    ATOMIC_CLEAR_BIT(flags, DAC_START_FLAG);
+    ATOMIC_CLEAR_BIT(flags, DAC_STARTED_FLAG);
 }
 
 void audio_dac_ctl(const AudioDacCmd_t cmd)
@@ -75,23 +73,23 @@ void audio_dac_ctl(const AudioDacCmd_t cmd)
     switch (cmd)
     {
     case AudioDacCmdEnableCh1: {
-        ATOMIC_SET_BIT(flags, SPK_ENABLE_FLAG);
+        ATOMIC_SET_BIT(flags, CH1_ENABLED_FLAG);
         break;
     }
     case AudioDacCmdDisableCh1: {
-        ATOMIC_CLEAR_BIT(flags, SPK_ENABLE_FLAG);
+        ATOMIC_CLEAR_BIT(flags, CH1_ENABLED_FLAG);
         break;
     }
     case AudioDacCmdEnableCh2: {
-        ATOMIC_SET_BIT(flags, HDST_ENABLE_FLAG);
+        ATOMIC_SET_BIT(flags, CH2_ENABLED_FLAG);
         break;
     }
     case AudioDacCmdDisableCh2: {
-        ATOMIC_CLEAR_BIT(flags, HDST_ENABLE_FLAG);
+        ATOMIC_CLEAR_BIT(flags, CH2_ENABLED_FLAG);
         break;
     }
     }
-    if ((cmd == AudioDacCmdDisableCh1 || cmd == AudioDacCmdDisableCh2) && IS_DAC_STARTED())
+    if (!IS_CH1_ENABLED() && !IS_CH2_ENABLED() && IS_DAC_STARTED())
     {
         dac_stop();
     }
@@ -101,6 +99,11 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
 {
     if (ch == DacCh1)
     {
+        if (!IS_CH1_ENABLED())
+        {
+            printf("dac ch1 not enable.");
+            return;
+        }
         for (size_t i = 0; i < DAC_DMA_FRAME_SAMPLE_NUM; ++i)
         {
             ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch1 = (uint16_t)((int32_t)data[i] + 32768U);
@@ -108,6 +111,11 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
     }
     else if (ch == DacCh2)
     {
+        if (!IS_CH2_ENABLED())
+        {
+            printf("dac ch2 not enable.");
+            return;
+        }
         for (size_t i = 0; i < DAC_DMA_FRAME_SAMPLE_NUM; ++i)
         {
             ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch2 = (uint16_t)((int32_t)data[i] + 32768U);
@@ -117,23 +125,20 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
 
 void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
-    (void)hdac;
-    dac_irq_handler(0);
+    if (hdac == &hdac1)
+    {
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0], DAC_DMA_FRAME_SAMPLE_NUM);
+        idle_buffer = 0;
+        event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
+    }
 }
 
 void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
-    (void)hdac;
-    dac_irq_handler(1);
-}
-
-static inline void dac_irq_handler(const uint8_t dma_frame_idx)
-{
-    idle_buffer = dma_frame_idx == 0U ? 1U : 0U;
-    arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[dma_frame_idx][0], DAC_DMA_FRAME_SAMPLE_NUM);
-    bool before = event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
-    if (before)
+    if (hdac == &hdac1)
     {
-        Error_Handler();
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0], DAC_DMA_FRAME_SAMPLE_NUM);
+        idle_buffer = 1;
+        event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
     }
 }

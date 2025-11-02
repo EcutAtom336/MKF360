@@ -1,5 +1,7 @@
 #include "User/audio_iis.h"
 
+#include <stdbool.h>
+
 #include "arm_math.h"
 
 #include "stm32h7xx_hal.h"
@@ -35,6 +37,16 @@ void iis_stop()
     }
 }
 
+int16_t *iis_get_tx_idle_buffer_address()
+{
+    return &iis_tx_dma_buffer[idle_buffer][0];
+}
+
+int16_t *iis_get_rx_idle_buffer_address()
+{
+    return &iis_rx_dma_buffer[idle_buffer][0];
+}
+
 void iis_tx_write(const int16_t *buffer)
 {
     arm_copy_q15(buffer, &iis_tx_dma_buffer[idle_buffer][0], IIS_DMA_FRAME_SAMPLE_NUM);
@@ -50,11 +62,7 @@ void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s)
     if (hi2s == &hi2s3)
     {
         idle_buffer = 0U;
-        bool before = event_group_set_event(EventGroup1, EventGroup1IisDmaBufferReady);
-        if (before)
-        {
-            Error_Handler();
-        }
+        event_group_set_event(EventGroup1, EventGroup1IisDmaBufferReady);
     }
 }
 
@@ -63,10 +71,6 @@ void HAL_I2SEx_TxRxCpltCallback(I2S_HandleTypeDef *hi2s)
     if (hi2s == &hi2s3)
     {
         idle_buffer = 1U;
-        bool before = event_group_set_event(EventGroup1, EventGroup1IisDmaBufferReady);
-        if (before)
-        {
-            Error_Handler();
-        }
+        event_group_set_event(EventGroup1, EventGroup1IisDmaBufferReady);
     }
 }

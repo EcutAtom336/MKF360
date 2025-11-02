@@ -47,6 +47,11 @@ void audio_adc_stop()
     }
 }
 
+int16_t *audio_adc_get_data_address()
+{
+    return &adc3_dma_buffer[idle_buffer][0];
+}
+
 void audio_adc_read(int16_t *buffer)
 {
     arm_copy_q15(&adc3_dma_buffer[idle_buffer][0], buffer, MKF360_DMA_FRAME_SAMPLE_NUM);
@@ -56,20 +61,12 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
 {
     (void)hadc;
     idle_buffer = 0U;
-    bool before = event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
-    if (before)
-    {
-        Error_Handler();
-    }
+    event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
     (void)hadc;
     idle_buffer = 1U;
-    bool before = event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
-    if (before)
-    {
-        Error_Handler();
-    }
+    event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
 }

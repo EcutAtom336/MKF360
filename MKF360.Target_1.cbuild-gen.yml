@@ -16,6 +16,7 @@ build-gen:
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/class/cdc
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/include
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/include
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/include
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
@@ -109,6 +110,12 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/event_group.c
           category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_io.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/speaker.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_det_isr.c
+          category: sourceC
     - group: CherryUSB
       files:
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/CherryUSB-1.5.2/core/usbd_core.c
@@ -130,4 +137,10 @@ build-gen:
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BLUETOOTH_DISCONNECT_PCM.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/src/BOOT_PCM.c
+          category: sourceC
+    - group: lwrb
+      files:
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb_ex.c
           category: sourceC

@@ -33,14 +33,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "usbd_core.h"
 
-#include "User/audio_dac.h"
-#include "User/audio_iis.h"
+#include "User/audio_io.h"
 #include "User/event_group.h"
 #include "User/mic.h"
 #include "User/retarget.h"
@@ -51,12 +49,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
-typedef enum
-{
-    None,
-    Usb,
-} InterfaceType_t;
 
 /* USER CODE END PTD */
 
@@ -76,10 +68,6 @@ typedef enum
 
 /* USER CODE BEGIN PV */
 
-__attribute__((section(".DTCM"))) static InterfaceType_t current_interface = None;
-
-// MDMA链接寄存器必须双字对齐
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,9 +75,6 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
-
-static void common_connect();
-static void common_disconnect();
 
 /* USER CODE END PFP */
 
@@ -158,28 +143,19 @@ int main(void)
     MX_USART1_UART_Init();
     MX_DAC1_Init();
     MX_I2S3_Init();
+    MX_TIM7_Init();
     MX_ADC3_Init();
     MX_TIM6_Init();
-    MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
 
-    HAL_GPIO_WritePin(BT_DISABLE__GPIO_Port, BT_DISABLE__Pin, GPIO_PIN_RESET);
-
     mic_mdma_init();
-    iis_start();
+
+    audio_io_init();
 
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-
-    usb_init(0, USB_OTG_FS_PERIPH_BASE);
-    uint8_t flag = 0;
-    uint32_t verify_pass_cnt = 0;
-
-    audio_dac_ctl(AudioDacCmdEnableCh1);
-
-    size_t n = 0;
 
     while (1)
     {
@@ -187,65 +163,34 @@ int main(void)
 
         /* USER CODE BEGIN 3 */
 
+        audio_io_handler();
+
         if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
         {
-            // 验证Mic data被MDMA正确交错
-            if (mic_verify_interlaced_data())
+            int16_t *interlaced_data = get_mic_interlaces_data_address();
+            for (size_t i = 0; i < DFSDM_DMA_FRAME_SAMPLE_NUM; i++)
             {
-                if (++verify_pass_cnt >= 100U)
-                {
-                    verify_pass_cnt = 0;
-                    printf("MDMA interlace mic data right 100 times. Tick: %u\n", HAL_GetTick());
-                }
+                interlaced_data[i] = (interlaced_data[i * 4 + 0] + interlaced_data[i * 4 + 1] +
+                                      interlaced_data[i * 4 + 2] + interlaced_data[i * 4 + 3]) *
+                                     50;
             }
-            else
-            {
-                printf("MDMA interlace mic data error!\n");
-                Error_Handler();
-            }
-            flag = flag == 0 ? 1 : 0;
+            audio_io_write(&interlaced_data[0], DFSDM_DMA_FRAME_SAMPLE_NUM);
         }
-        else if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
+        if (event_group_check_event(EventGroup1, EventGroup1AudioIoConnected, true))
         {
-            if (n + DAC_DMA_FRAME_SAMPLE_NUM >= BOOT_PCM_LEN)
-            {
-                continue;
-            }
-            audio_dac_write_ch(&BOOT_PCM[n], DacCh1);
-            audio_dac_write_ch(&BOOT_PCM[n], DacCh2);
-            n += DAC_DMA_FRAME_SAMPLE_NUM;
+            printf("Audio IO connected.\n");
+            mic_start();
         }
-        else if (event_group_check_event(EventGroup1, EventGroup1IisDmaBufferReady, true))
+        if (event_group_check_event(EventGroup1, EventGroup1AudioIoDisconnected, true))
         {
+            printf("Audio IO disconnected.\n");
+            mic_stop();
         }
-        else if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
-        {
-        }
-        else if (event_group_check_event(EventGroup1, EventGroup1UacConnect, true))
-        {
-            common_connect();
-            current_interface = Usb;
-            printf("USB connect.\n");
-        }
-        else if (event_group_check_event(EventGroup1, EventGroup1Disconnect, true))
-        {
-            common_disconnect();
-            // CherryUSB 无法检测断开连接，
-            // 导致断开连接时重复触发挂起事件，
-            // 重新初始化协议栈
-            if (current_interface == Usb)
-            {
-                usbd_deinitialize(0);
-                usb_init(0, USB_OTG_FS_PERIPH_BASE);
-            }
-            current_interface = None;
-            printf("USB disconnect.\n");
-        }
-        else if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
+        if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
         {
             flush_stdout();
         }
-        else if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
+        if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
         }
@@ -352,29 +297,6 @@ void PeriphCommonClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-static void common_connect()
-{
-    mic_start();
-}
-
-static void common_disconnect()
-{
-    mic_stop();
-}
-
-void on_uac_connect()
-{
-    event_group_set_event(EventGroup1, EventGroup1UacConnect);
-}
-
-void on_disconnect()
-{
-    if (current_interface == Usb)
-    {
-        event_group_set_event(EventGroup1, EventGroup1Disconnect);
-    }
-}
-
 void period_event_tick()
 {
     static size_t last_tick[] = {0U, 0U};
@@ -388,32 +310,6 @@ void period_event_tick()
             last_tick[i] = tick;
             event_group_set_event(EventGroup1, event_bit[i]);
         }
-    }
-}
-
-void mkf360_svc_handler(uint32_t *stacked)
-{
-    uint16_t *pc_ptr = (uint16_t *)(stacked[6] - 2);
-    uint8_t svc_number = (uint8_t)(*pc_ptr & 0xFF);
-
-    switch (svc_number)
-    {
-    case 0: {
-        HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-        break;
-    }
-    case 1: {
-        HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
-        break;
-    }
-    case 2: {
-        HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
-        break;
-    }
-    case 3: {
-        HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
-        break;
-    }
     }
 }
 
@@ -494,16 +390,6 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *pcdHandle)
         /* USER CODE BEGIN USB_OTG_FS_MspDeInit 1 */
 
         /* USER CODE END USB_OTG_FS_MspDeInit 1 */
-    }
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    // CherryUSB不支持USB disconnect事件触发，
-    // 使用VBUS下降沿触发USB disconnect
-    if (GPIO_Pin == VBUS_DETECT_Pin)
-    {
-        on_disconnect();
     }
 }
 

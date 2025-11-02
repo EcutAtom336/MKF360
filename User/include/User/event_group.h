@@ -18,9 +18,23 @@ typedef enum
     EventGroup1DacDmaBufferReady,
     EventGroup1IisDmaBufferReady,
     EventGroup1Adc3DmaBufferReady,
+    EventGroup1UacDataIn,
+    EventGroup1UacDataOut,
 
-    EventGroup1UacConnect,
-    EventGroup1Disconnect,
+    EventGroup1UsbConnect,
+    EventGroup1UsbDisconnect,
+
+    EventGroup1BtConnect,
+    EventGroup1BtDisconnect,
+
+    EventGroup1AuxConnect,
+    EventGroup1AuxDisconnect,
+
+    EventGroup1AudioIoConnected,
+    EventGroup1AudioIoDisconnected,
+
+    // EventGroup1AudioIoDataIn,
+    // EventGroup1AudioIoDataOut,
 
     EventGroup1Tick50Pass,
     EventGroup1Tick500Pass,

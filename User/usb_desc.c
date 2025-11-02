@@ -1,12 +1,14 @@
 #include "User/usb_desc.h"
 
+#include "arm_math.h"
+
 #include "usbd_core.h"
 //
 #include "usbd_audio.h"
 #include "usbd_cdc_acm.h"
 
-#include "audio/PCM_RES.h"
-#include "main.h"
+#include "MKF360_config.h"
+#include "User/event_group.h"
 
 #ifndef CONFIG_USBDEV_ADVANCE_DESC
 #error "Please enable CONFIG_USBDEV_ADVANCE_DESC macro."
@@ -223,22 +225,20 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t cdc_write_buffer[CDC_MAX_MPS];
 volatile bool cdc_ep_tx_busy_flag = false;
 volatile bool uac_ep_tx_busy_flag = false;
 
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t uac_read_buffer[AUDIO_OUT_PACKET];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t uac_write_buffer[AUDIO_IN_PACKET];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t s_speaker_feedback_buffer[4];
+// MKF360_DMA_FRAME_SAMPLE_NUM 必须是 AUDIO_IN_PACKET 和 AUDIO_OUT_PACKET 的倍数
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
+    uac_read_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
+    uac_write_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+__attribute__((section(".bss.DTCM"))) static uint8_t uac_read_idle_buffer_idx;
+__attribute__((section(".bss.DTCM"))) static uint8_t uac_write_idle_buffer_idx;
+__attribute__((section(".bss.DTCM"))) static uint32_t uac_read_buffer_full;
+__attribute__((section(".bss.DTCM"))) static int32_t uac_write_buffer_remain;
 
 volatile bool tx_flag = 0;
 volatile bool rx_flag = 0;
-volatile uint32_t s_mic_sample_rate;
-volatile uint32_t s_speaker_sample_rate;
-
-__attribute__((section(".bss.DTCM"))) UacOpenCallback uac_open_speaker_callback;
-__attribute__((section(".bss.DTCM"))) UacCloseCallback uac_close_speaker_callback;
-__attribute__((section(".bss.DTCM"))) UacDataCallback uac_speaker_data_callback;
-
-__attribute__((section(".bss.DTCM"))) UacOpenCallback uac_open_mic_callback;
-__attribute__((section(".bss.DTCM"))) UacCloseCallback uac_close_mic_callback;
-__attribute__((section(".bss.DTCM"))) UacDataCallback uac_mic_data_callback;
+volatile uint32_t mic_sample_rate;
+volatile uint32_t speaker_sample_rate;
 
 void usbd_event_handler(uint8_t busid, uint8_t event)
 {
@@ -259,7 +259,7 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
     case USBD_EVENT_SUSPEND:
         break;
     case USBD_EVENT_CONFIGURED:
-        on_uac_connect();
+        event_group_set_event(EventGroup1, EventGroup1UsbConnect);
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;
@@ -312,24 +312,28 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
 {
     if (intf == UAC_SPEAKER_INTERFACE)
     {
-        if (uac_open_speaker_callback)
-        {
-            uac_open_speaker_callback();
-        }
         rx_flag = 1;
-        usbd_ep_start_read(busid, AUDIO_OUT_EP, uac_read_buffer, AUDIO_OUT_PACKET);
-        printf("Open speaker.\n");
+        arm_fill_q15(0, (q15_t *)&uac_read_buffer[0][0], sizeof(uac_read_buffer) / sizeof(int16_t));
+        uac_read_buffer_full = 0;
+        uac_read_idle_buffer_idx = 1;
+        usbd_ep_start_read(busid, AUDIO_OUT_EP,
+                           &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_read_buffer_full],
+                           AUDIO_OUT_PACKET);
+        event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
     else if (intf == UAC_MIC_INTERFACE)
     {
-        if (uac_open_mic_callback)
-        {
-            uac_open_mic_callback();
-        }
         tx_flag = 1;
         uac_ep_tx_busy_flag = false;
-        usbd_ep_start_write(busid, AUDIO_IN_EP, uac_write_buffer, AUDIO_IN_PACKET);
-        printf("Open mic.\n");
+        arm_fill_q15(0, (q15_t *)&uac_write_buffer[0][0], sizeof(uac_write_buffer) / sizeof(int16_t));
+        uac_write_buffer_remain = MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE;
+        uac_write_idle_buffer_idx = 1;
+        usbd_ep_start_write(
+            busid, AUDIO_IN_EP,
+            &uac_write_buffer[uac_write_idle_buffer_idx = 0 ? 1 : 0]
+                             [MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE - uac_write_buffer_remain],
+            AUDIO_IN_PACKET);
+        event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
 }
 
@@ -338,22 +342,12 @@ void usbd_audio_close(uint8_t busid, uint8_t intf)
     (void)busid;
     if (intf == UAC_SPEAKER_INTERFACE)
     {
-        if (uac_close_speaker_callback)
-        {
-            uac_close_speaker_callback();
-        }
         rx_flag = 0;
-        printf("Close speaker.\n");
     }
     else if (intf == UAC_MIC_INTERFACE)
     {
-        if (uac_close_mic_callback)
-        {
-            uac_close_mic_callback();
-        }
         tx_flag = 0;
         uac_ep_tx_busy_flag = false;
-        printf("Close mic\n");
     }
 }
 
@@ -362,11 +356,11 @@ void usbd_audio_set_sampling_freq(uint8_t busid, uint8_t ep, uint32_t sampling_f
     (void)busid;
     if (ep == AUDIO_OUT_EP)
     {
-        s_speaker_sample_rate = sampling_freq;
+        speaker_sample_rate = sampling_freq;
     }
     else if (ep == AUDIO_IN_EP)
     {
-        s_mic_sample_rate = sampling_freq;
+        mic_sample_rate = sampling_freq;
     }
 }
 
@@ -378,51 +372,79 @@ uint32_t usbd_audio_get_sampling_freq(uint8_t busid, uint8_t ep)
 
     if (ep == AUDIO_OUT_EP)
     {
-        freq = s_speaker_sample_rate;
+        freq = speaker_sample_rate;
     }
     else if (ep == AUDIO_IN_EP)
     {
-        freq = s_mic_sample_rate;
+        freq = mic_sample_rate;
     }
 
     return freq;
 }
 
+// audio out 代表主机输出，设备端输入
 void usbd_audio_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
-    (void)busid;
-    (void)ep;
     (void)nbytes;
-    usbd_ep_start_read(busid, AUDIO_OUT_EP, uac_read_buffer, AUDIO_OUT_PACKET);
-    if (uac_speaker_data_callback)
+
+    uac_read_buffer_full += AUDIO_OUT_PACKET;
+
+    if (uac_read_buffer_full == MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
-        uac_speaker_data_callback((int16_t *)&uac_read_buffer[0], nbytes);
+        uac_read_buffer_full = 0;
+        uac_read_idle_buffer_idx = uac_read_idle_buffer_idx == 0 ? 1 : 0;
+
+        event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
+    else if (uac_read_buffer_full > MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    {
+        __disable_irq();
+        while (1)
+            ;
+    }
+
+    usbd_ep_start_read(busid, ep, &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_read_buffer_full],
+                       AUDIO_OUT_PACKET);
 }
 
-static uint32_t sent_bytes = 0;
+// audio in 代表主机输入，设备端输出
 void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
-    (void)busid;
-    (void)ep;
     (void)nbytes;
 
-    if (uac_mic_data_callback)
+    uac_write_buffer_remain -= AUDIO_IN_PACKET;
+
+    if (uac_write_buffer_remain == 0)
     {
-        uac_mic_data_callback((int16_t *)&uac_write_buffer[0], nbytes);
+        uac_write_buffer_remain = MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE;
+        uac_write_idle_buffer_idx = uac_write_idle_buffer_idx == 0 ? 1 : 0;
+
+        event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
-    else
+    else if (uac_write_buffer_remain < 0)
     {
-        memcpy(uac_write_buffer, (void *)BATTERY_LOW_PCM + sent_bytes, AUDIO_IN_PACKET);
-        sent_bytes += AUDIO_IN_PACKET;
-        if (sent_bytes + AUDIO_IN_PACKET >= sizeof(BATTERY_LOW_PCM))
-        {
-            sent_bytes = 0;
-        }
+        __disable_irq();
+        while (1)
+            ;
     }
-    usbd_ep_start_write(busid, AUDIO_IN_EP, uac_write_buffer, AUDIO_IN_PACKET);
+
+    usbd_ep_start_write(
+        busid, ep,
+        &uac_write_buffer[uac_write_idle_buffer_idx == 0 ? 1 : 0]
+                         [MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE - uac_write_buffer_remain],
+        AUDIO_IN_PACKET);
 
     uac_ep_tx_busy_flag = false;
+}
+
+void *uac_get_write_buffer_address()
+{
+    return &uac_write_buffer[uac_write_idle_buffer_idx][0];
+}
+
+void *uac_get_read_buffer_address()
+{
+    return &uac_read_buffer[uac_read_idle_buffer_idx][0];
 }
 
 static struct usbd_interface intf0;

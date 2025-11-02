@@ -34,11 +34,7 @@ static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
     {
         mic_data_interlaced_from = 1;
     }
-    bool before = event_group_set_event(EventGroup1, EventGroup1MicDataInterlaced);
-    if (before)
-    {
-        Error_Handler();
-    }
+    event_group_set_event(EventGroup1, EventGroup1MicDataInterlaced);
 }
 
 void mic_mdma_init()
@@ -221,6 +217,15 @@ void mic_stop()
             Error_Handler();
         }
     }
+
+    if (HAL_MDMA_GetState(&hmdma_mdma_channel0_sw_0) == HAL_MDMA_STATE_BUSY)
+    {
+        HAL_MDMA_Abort_IT(&hmdma_mdma_channel0_sw_0);
+    }
+    if (HAL_MDMA_GetState(&hmdma_mdma_channel1_sw_0) == HAL_MDMA_STATE_BUSY)
+    {
+        HAL_MDMA_Abort_IT(&hmdma_mdma_channel1_sw_0);
+    }
 }
 
 bool mic_verify_interlaced_data()
@@ -288,7 +293,7 @@ static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, cons
                                                       (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_NUM);
         if (ret_hal != HAL_OK)
         {
-            Error_Handler();
+#warning ""
         }
     }
     else if ((internal_flag & INTERNAL_MIC_SH_RDY_BIT) == INTERNAL_MIC_SH_RDY_BIT)
@@ -298,7 +303,7 @@ static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, cons
                                                       (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_NUM);
         if (ret_hal != HAL_OK)
         {
-            Error_Handler();
+#warning ""
         }
     }
 }

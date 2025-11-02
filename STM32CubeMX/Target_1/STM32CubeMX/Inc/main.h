@@ -56,8 +56,6 @@ extern "C"
     /* USER CODE BEGIN EFP */
 
     void period_event_tick();
-    void on_uac_connect();
-    void on_disconnect();
 
 /* USER CODE END EFP */
 

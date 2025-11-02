@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--query-driver=${env:ARMCLANG_HOME}/bin/armclang.exe"
+    ]
+}
