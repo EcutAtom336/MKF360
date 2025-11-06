@@ -232,8 +232,8 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
     uac_write_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
 __attribute__((section(".bss.DTCM"))) static uint8_t uac_read_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) static uint8_t uac_write_idle_buffer_idx;
-__attribute__((section(".bss.DTCM"))) static uint32_t uac_read_buffer_full;
-__attribute__((section(".bss.DTCM"))) static int32_t uac_write_buffer_remain;
+__attribute__((section(".bss.DTCM"))) static uint32_t uac_recv_buffer_full;
+__attribute__((section(".bss.DTCM"))) static uint32_t uac_send_buffer_sent;
 
 volatile bool tx_flag = 0;
 volatile bool rx_flag = 0;
@@ -314,10 +314,10 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
     {
         rx_flag = 1;
         arm_fill_q15(0, (q15_t *)&uac_read_buffer[0][0], sizeof(uac_read_buffer) / sizeof(int16_t));
-        uac_read_buffer_full = 0;
+        uac_recv_buffer_full = 0;
         uac_read_idle_buffer_idx = 1;
         usbd_ep_start_read(busid, AUDIO_OUT_EP,
-                           &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_read_buffer_full],
+                           &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_recv_buffer_full],
                            AUDIO_OUT_PACKET);
         event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
@@ -326,13 +326,11 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
         tx_flag = 1;
         uac_ep_tx_busy_flag = false;
         arm_fill_q15(0, (q15_t *)&uac_write_buffer[0][0], sizeof(uac_write_buffer) / sizeof(int16_t));
-        uac_write_buffer_remain = MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE;
+        uac_send_buffer_sent = 0;
         uac_write_idle_buffer_idx = 1;
-        usbd_ep_start_write(
-            busid, AUDIO_IN_EP,
-            &uac_write_buffer[uac_write_idle_buffer_idx = 0 ? 1 : 0]
-                             [MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE - uac_write_buffer_remain],
-            AUDIO_IN_PACKET);
+        usbd_ep_start_write(busid, AUDIO_IN_EP,
+                            &uac_write_buffer[uac_write_idle_buffer_idx = 0 ? 1 : 0][uac_send_buffer_sent],
+                            AUDIO_IN_PACKET);
         event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
 }
@@ -387,23 +385,23 @@ void usbd_audio_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void)nbytes;
 
-    uac_read_buffer_full += AUDIO_OUT_PACKET;
+    uac_recv_buffer_full += AUDIO_OUT_PACKET;
 
-    if (uac_read_buffer_full == MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_recv_buffer_full == MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
-        uac_read_buffer_full = 0;
+        uac_recv_buffer_full = 0;
         uac_read_idle_buffer_idx = uac_read_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
-    else if (uac_read_buffer_full > MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_recv_buffer_full > MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)
             ;
     }
 
-    usbd_ep_start_read(busid, ep, &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_read_buffer_full],
+    usbd_ep_start_read(busid, ep, &uac_read_buffer[uac_read_idle_buffer_idx == 0 ? 1 : 0][uac_recv_buffer_full],
                        AUDIO_OUT_PACKET);
 }
 
@@ -412,27 +410,24 @@ void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void)nbytes;
 
-    uac_write_buffer_remain -= AUDIO_IN_PACKET;
+    uac_send_buffer_sent += AUDIO_IN_PACKET;
 
-    if (uac_write_buffer_remain == 0)
+    if (uac_send_buffer_sent == MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
-        uac_write_buffer_remain = MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE;
+        uac_send_buffer_sent = 0;
         uac_write_idle_buffer_idx = uac_write_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
-    else if (uac_write_buffer_remain < 0)
+    else if (uac_send_buffer_sent > MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)
             ;
     }
 
-    usbd_ep_start_write(
-        busid, ep,
-        &uac_write_buffer[uac_write_idle_buffer_idx == 0 ? 1 : 0]
-                         [MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE - uac_write_buffer_remain],
-        AUDIO_IN_PACKET);
+    usbd_ep_start_write(busid, ep, &uac_write_buffer[uac_write_idle_buffer_idx == 0 ? 1 : 0][uac_send_buffer_sent],
+                        AUDIO_IN_PACKET);
 
     uac_ep_tx_busy_flag = false;
 }
