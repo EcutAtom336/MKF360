@@ -230,10 +230,10 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
     uac_read_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
     uac_write_buffer[2][MKF360_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
-__attribute__((section(".bss.DTCM"))) static uint8_t uac_read_idle_buffer_idx;
-__attribute__((section(".bss.DTCM"))) static uint8_t uac_write_idle_buffer_idx;
-__attribute__((section(".bss.DTCM"))) static uint32_t uac_recv_buffer_full;
-__attribute__((section(".bss.DTCM"))) static uint32_t uac_send_buffer_sent;
+__attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_read_idle_buffer_idx;
+__attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_write_idle_buffer_idx;
+__attribute__((section(".bss.DTCM"))) volatile static uint32_t uac_recv_buffer_full;
+__attribute__((section(".bss.DTCM"))) volatile static uint32_t uac_send_buffer_sent;
 
 volatile bool tx_flag = 0;
 volatile bool rx_flag = 0;

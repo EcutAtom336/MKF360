@@ -29,7 +29,7 @@ __attribute__((section(".bss.DMA_RAM_D2")))
 __attribute__((aligned(1024))) static uint32_t dac_dma_buffer[2][DAC_DMA_FRAME_SAMPLE_NUM];
 
 __attribute__((section(".bss.DTCM"))) static uint32_t flags;
-__attribute__((section(".bss.DTCM"))) static uint32_t idle_buffer;
+__attribute__((section(".bss.DTCM"))) volatile static uint32_t idle_buffer;
 
 static void dac_start()
 {

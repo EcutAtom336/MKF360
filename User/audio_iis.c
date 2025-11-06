@@ -14,7 +14,7 @@
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t iis_tx_dma_buffer[2][IIS_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t iis_rx_dma_buffer[2][IIS_DMA_FRAME_SAMPLE_NUM];
 
-__attribute__((section(".bss.DTCM"))) static uint32_t idle_buffer;
+__attribute__((section(".bss.DTCM"))) volatile static uint32_t idle_buffer;
 
 void iis_start()
 {

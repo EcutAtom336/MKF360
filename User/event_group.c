@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-__attribute__((section(".bss.DTCM"))) uint32_t event_groups[EventGroupNum];
+__attribute__((section(".bss.DTCM"))) volatile static uint32_t event_groups[EventGroupNum];
 
 bool event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx)
 {

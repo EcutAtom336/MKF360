@@ -255,7 +255,7 @@ int16_t *get_mic_interlaces_data_address()
 
 static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, const uint8_t idx)
 {
-    static uint32_t internal_flag = 0;
+    volatile static uint32_t internal_flag = 0;
     const uint32_t INTERNAL_MIC1_FH_RDY_BIT = 1 << 0;
     const uint32_t INTERNAL_MIC2_FH_RDY_BIT = 1 << 1;
     const uint32_t INTERNAL_MIC3_FH_RDY_BIT = 1 << 2;
