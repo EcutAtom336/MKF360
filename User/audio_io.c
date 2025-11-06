@@ -1,17 +1,22 @@
 #include "User/audio_io.h"
 
-#include "arm_math.h"
-#include "lwrb/lwrb.h"
-#include "stm32h7xx_hal.h"
+#include <stdbool.h>
 
 #include "MKF360_config.h"
 #include "User/audio_adc.h"
+#include "User/audio_buffer.h"
 #include "User/audio_dac.h"
 #include "User/audio_iis.h"
 #include "User/event_group.h"
+#include "User/mic.h"
 #include "User/usb_desc.h"
 #include "main.h"
 #include "usbd_core.h"
+
+/**
+ * [Interface] --> input_rb --> (process) --> playback_rb --> [Speaker]
+ * [Mic] --> capture_rb --> (process) --> output_rb --> [Interface]
+ */
 
 typedef enum
 {
@@ -28,13 +33,6 @@ typedef enum
     FlagsIdxUacEnabled,
 } FlagsIdx_t;
 
-__attribute__((section(".bss.DTCM"))) static lwrb_t capture_rb;
-__attribute__((section(".bss.DTCM"))) static lwrb_t playback_rb;
-__attribute__((section(".bss.DTCM"))) static uint8_t
-    audio_capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
-__attribute__((section(".bss.DTCM"))) static uint8_t
-    audio_playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
-
 __attribute__((section(".bss.DTCM"))) static uint32_t flags;
 
 __attribute__((section(".bss.DTCM"))) static AudioIoType_t audio_io_type = AudioIoTypeNone;
@@ -47,10 +45,6 @@ static inline void uac_enable();
 static inline void uac_disable();
 static void speaker_start();
 static void speaker_stop();
-static int32_t capture_read(void *const data, const size_t sample_num);
-static int32_t playback_write(const void *const data, const size_t sample_num);
-static int32_t playback_read(void *const data, const size_t sample_num);
-static void reset_audio_rb();
 
 static inline void aux_enable()
 {
@@ -147,63 +141,10 @@ static inline void enable_all_audio_io()
     }
 }
 
-static int32_t capture_read(void *const data, const size_t sample_num)
-{
-    if (lwrb_get_full(&capture_rb) < sample_num * MKF360_AUDIO_SAMPLE_SIZE)
-    {
-        return -1;
-    }
-    __disable_irq();
-    lwrb_read(&capture_rb, data, sample_num * MKF360_AUDIO_SAMPLE_SIZE);
-    __enable_irq();
-    return sample_num;
-}
-
-static int32_t playback_write(const void *const data, const size_t sample_num)
-{
-    __disable_irq();
-    lwrb_overwrite(&playback_rb, data, sample_num * MKF360_AUDIO_SAMPLE_SIZE);
-    __enable_irq();
-    return sample_num;
-}
-
-static int32_t playback_read(void *const data, const size_t sample_num)
-{
-    if (lwrb_get_full(&playback_rb) < sample_num * MKF360_AUDIO_SAMPLE_SIZE)
-    {
-        return -1;
-    }
-    __disable_irq();
-    lwrb_read(&playback_rb, data, sample_num * MKF360_AUDIO_SAMPLE_SIZE);
-    __enable_irq();
-    return sample_num;
-}
-
-static void reset_audio_rb()
-{
-    __disable_irq();
-    lwrb_reset(&capture_rb);
-    lwrb_reset(&playback_rb);
-    __enable_irq();
-}
-
 void audio_io_init()
 {
-    uint8_t ret_uint8 = 0;
-
-    // 初始化 IO 缓冲区
-    ret_uint8 = lwrb_init(&capture_rb, &audio_capture_rb_buf[0], sizeof(audio_capture_rb_buf));
-    if (ret_uint8 != 1U)
-    {
-        Error_Handler();
-    }
-
-    ret_uint8 = lwrb_init(&playback_rb, &audio_playback_rb_buf[0], sizeof(audio_playback_rb_buf));
-    if (ret_uint8 != 1U)
-    {
-        Error_Handler();
-    }
-
+    mic_mdma_init();
+    audio_buffer_init();
     enable_all_audio_io();
 }
 
@@ -212,38 +153,35 @@ bool audio_io_is_connected()
     return audio_io_type != AudioIoTypeNone;
 }
 
-void audio_io_write(const void *const data, const size_t sample_num)
-{
-    __disable_irq();
-    lwrb_overwrite(&capture_rb, data, sample_num * MKF360_AUDIO_SAMPLE_SIZE);
-    __enable_irq();
-}
-
 void audio_io_handler()
 {
     // 处理连接事件
+    bool has_connect_event = false;
     if (event_group_check_event(EventGroup1, EventGroup1AuxConnect, true) && audio_io_type == AudioIoTypeNone)
     {
         disable_audio_io_exclue(AudioIoTypeAux);
         audio_adc_start();
-        speaker_start();
         audio_dac_ctl(AudioDacCmdEnableCh2);
         audio_io_type = AudioIoTypeAux;
-        event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
+        has_connect_event = true;
     }
     if (event_group_check_event(EventGroup1, EventGroup1BtConnect, true) && audio_io_type == AudioIoTypeNone)
     {
         disable_audio_io_exclue(AudioIoTypeBt);
         iis_start();
-        speaker_start();
         audio_io_type = AudioIoTypeBt;
-        event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
+        has_connect_event = true;
     }
     if (event_group_check_event(EventGroup1, EventGroup1UsbConnect, true) && audio_io_type == AudioIoTypeNone)
     {
         disable_audio_io_exclue(AudioIoTypeUac);
-        speaker_start();
         audio_io_type = AudioIoTypeUac;
+        has_connect_event = true;
+    }
+    if (has_connect_event == true)
+    {
+        speaker_start();
+        mic_start();
         event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
     }
 
@@ -256,26 +194,26 @@ void audio_io_handler()
         usbd_deinitialize(0);
         usb_init(0, USB_OTG_FS_PERIPH_BASE);
         has_disconnect_event = true;
-        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
     }
     if (event_group_check_event(EventGroup1, EventGroup1BtDisconnect, true) && audio_io_type == AudioIoTypeBt)
     {
-        speaker_stop();
         iis_stop();
-        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
+        has_disconnect_event = true;
     }
     if (event_group_check_event(EventGroup1, EventGroup1AuxDisconnect, true) && audio_io_type == AudioIoTypeAux)
     {
         audio_adc_stop();
         audio_dac_ctl(AudioDacCmdDisableCh2);
-        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
+        has_disconnect_event = true;
     }
     if (has_disconnect_event == true)
     {
-        speaker_stop();
         audio_io_type = AudioIoTypeNone;
+        mic_stop();
+        speaker_stop();
         enable_all_audio_io();
         reset_audio_rb();
+        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
     }
 
     int32_t ret_int32 = 0;
@@ -285,22 +223,22 @@ void audio_io_handler()
     {
         if (audio_io_type == AudioIoTypeBt)
         {
-            capture_read(iis_get_tx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
-            playback_write(iis_get_rx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+            interface_out_read(iis_get_tx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+            interface_in_write(iis_get_rx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
     {
         if (audio_io_type == AudioIoTypeAux)
         {
-            playback_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+            interface_in_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
     {
         __attribute__((section(".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM];
 
-        ret_int32 = playback_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+        ret_int32 = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM)
         {
             audio_dac_write_ch(&tmp[0], DacCh1);
@@ -308,7 +246,7 @@ void audio_io_handler()
 
         if (audio_io_type == AudioIoTypeAux)
         {
-            ret_int32 = capture_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+            ret_int32 = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
             if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM)
             {
                 audio_dac_write_ch(&tmp[0], DacCh2);
@@ -317,10 +255,14 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
     {
-        playback_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+        interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, true))
     {
-        capture_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+        interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
+    }
+    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
+    {
+        mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 4);
     }
 }

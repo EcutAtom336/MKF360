@@ -244,11 +244,6 @@ bool mic_verify_interlaced_data()
     return true;
 }
 
-void mic_interlace_data_read(int16_t *buffer)
-{
-    arm_copy_q15(&mic_data_interlaced[0], buffer, MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 4U);
-}
-
 int16_t *get_mic_interlaces_data_address()
 {
     return &mic_data_interlaced[0];

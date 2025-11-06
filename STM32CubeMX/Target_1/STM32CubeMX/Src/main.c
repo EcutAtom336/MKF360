@@ -39,10 +39,9 @@
 #include "usbd_core.h"
 
 #include "User/audio_io.h"
+#include "User/audio_processor.h"
 #include "User/event_group.h"
-#include "User/mic.h"
 #include "User/retarget.h"
-#include "User/usb_desc.h"
 #include "audio/PCM_RES.h"
 
 /* USER CODE END Includes */
@@ -148,8 +147,6 @@ int main(void)
     MX_TIM6_Init();
     /* USER CODE BEGIN 2 */
 
-    mic_mdma_init();
-
     audio_io_init();
 
     /* USER CODE END 2 */
@@ -165,26 +162,15 @@ int main(void)
 
         audio_io_handler();
 
-        if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
-        {
-            int16_t *interlaced_data = get_mic_interlaces_data_address();
-            for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM; i++)
-            {
-                interlaced_data[i] = (interlaced_data[i * 4 + 0] + interlaced_data[i * 4 + 1] +
-                                      interlaced_data[i * 4 + 2] + interlaced_data[i * 4 + 3]) *
-                                     50;
-            }
-            audio_io_write(&interlaced_data[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
-        }
+        audio_process();
+
         if (event_group_check_event(EventGroup1, EventGroup1AudioIoConnected, true))
         {
             printf("Audio IO connected.\n");
-            mic_start();
         }
         if (event_group_check_event(EventGroup1, EventGroup1AudioIoDisconnected, true))
         {
             printf("Audio IO disconnected.\n");
-            mic_stop();
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
         {

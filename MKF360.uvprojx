@@ -429,6 +429,16 @@
               <FileType>1</FileType>
               <FilePath>.\User\audio_det_isr.c</FilePath>
             </File>
+            <File>
+              <FileName>audio_buffer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\audio_buffer.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio_processor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\audio_processor.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

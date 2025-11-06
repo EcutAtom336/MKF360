@@ -14,8 +14,6 @@ void audio_io_init();
 
 bool audio_io_is_connected();
 
-void audio_io_write(const void *const data, const size_t sample_num);
-
 void audio_io_handler();
 
 #endif // !__AUDIO_IO__
