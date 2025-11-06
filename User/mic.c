@@ -19,8 +19,8 @@ __attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_Lin
 __attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_2;
 __attribute__((aligned(8))) __attribute__((section(".bss.DMA_RAM_D2"))) MDMA_LinkNodeTypeDef node_mdma_channel1_sw_3;
 
-__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[4][2][DFSDM_DMA_FRAME_SAMPLE_NUM];
-__attribute__((section(".bss.DTCM"))) static int16_t mic_data_interlaced[4 * DFSDM_DMA_FRAME_SAMPLE_NUM];
+__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[4][2][MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM];
+__attribute__((section(".bss.DTCM"))) static int16_t mic_data_interlaced[4 * MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM];
 __attribute__((section(".bss.DTCM"))) static uint8_t mic_data_interlaced_from;
 
 static void mic_data_interlace_complete(MDMA_HandleTypeDef *hmdma)
@@ -63,7 +63,7 @@ void mic_mdma_init()
         .PostRequestMaskAddress = 0,
         .PostRequestMaskData = 0,
         .BlockDataLength = 2,
-        .BlockCount = DFSDM_DMA_FRAME_SAMPLE_NUM,
+        .BlockCount = MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM,
     };
 
     // MDMA channel 0
@@ -189,7 +189,8 @@ void mic_start()
 
     for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
     {
-        ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], mic_data[i][0], DFSDM_DMA_FRAME_SAMPLE_NUM * 2);
+        ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], mic_data[i][0],
+                                                      MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 2);
         if (ret_hal != HAL_OK)
         {
             printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);
@@ -230,7 +231,7 @@ void mic_stop()
 
 bool mic_verify_interlaced_data()
 {
-    for (size_t i = 0; i < DFSDM_DMA_FRAME_SAMPLE_NUM; i++)
+    for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM; i++)
     {
         for (size_t j = 0; j < 4; j++)
         {
@@ -245,7 +246,7 @@ bool mic_verify_interlaced_data()
 
 void mic_interlace_data_read(int16_t *buffer)
 {
-    arm_copy_q15(&mic_data_interlaced[0], buffer, DFSDM_DMA_FRAME_SAMPLE_NUM * 4U);
+    arm_copy_q15(&mic_data_interlaced[0], buffer, MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 4U);
 }
 
 int16_t *get_mic_interlaces_data_address()
@@ -289,8 +290,9 @@ static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, cons
     if ((internal_flag & INTERNAL_MIC_FH_RDY_BIT) == INTERNAL_MIC_FH_RDY_BIT)
     {
         ATOMIC_CLEAR_BIT(internal_flag, INTERNAL_MIC_FH_RDY_BIT);
-        HAL_StatusTypeDef ret_hal = HAL_MDMA_Start_IT(&hmdma_mdma_channel0_sw_0, (uint32_t)&mic_data[0][0][0],
-                                                      (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_NUM);
+        HAL_StatusTypeDef ret_hal =
+            HAL_MDMA_Start_IT(&hmdma_mdma_channel0_sw_0, (uint32_t)&mic_data[0][0][0],
+                              (uint32_t)&mic_data_interlaced[0], 2, MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         if (ret_hal != HAL_OK)
         {
 #warning ""
@@ -299,8 +301,9 @@ static inline void dfsdm_dma_irq(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, cons
     else if ((internal_flag & INTERNAL_MIC_SH_RDY_BIT) == INTERNAL_MIC_SH_RDY_BIT)
     {
         ATOMIC_CLEAR_BIT(internal_flag, INTERNAL_MIC_SH_RDY_BIT);
-        HAL_StatusTypeDef ret_hal = HAL_MDMA_Start_IT(&hmdma_mdma_channel1_sw_0, (uint32_t)&mic_data[0][1][0],
-                                                      (uint32_t)&mic_data_interlaced[0], 2, DFSDM_DMA_FRAME_SAMPLE_NUM);
+        HAL_StatusTypeDef ret_hal =
+            HAL_MDMA_Start_IT(&hmdma_mdma_channel1_sw_0, (uint32_t)&mic_data[0][1][0],
+                              (uint32_t)&mic_data_interlaced[0], 2, MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         if (ret_hal != HAL_OK)
         {
 #warning ""

@@ -168,13 +168,13 @@ int main(void)
         if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
         {
             int16_t *interlaced_data = get_mic_interlaces_data_address();
-            for (size_t i = 0; i < DFSDM_DMA_FRAME_SAMPLE_NUM; i++)
+            for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM; i++)
             {
                 interlaced_data[i] = (interlaced_data[i * 4 + 0] + interlaced_data[i * 4 + 1] +
                                       interlaced_data[i * 4 + 2] + interlaced_data[i * 4 + 3]) *
                                      50;
             }
-            audio_io_write(&interlaced_data[0], DFSDM_DMA_FRAME_SAMPLE_NUM);
+            audio_io_write(&interlaced_data[0], MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM);
         }
         if (event_group_check_event(EventGroup1, EventGroup1AudioIoConnected, true))
         {
