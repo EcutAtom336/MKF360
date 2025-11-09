@@ -2,31 +2,26 @@ LR_IROM1 0x08000000 0x20000 {
   ER_IROM1 0x08000000 0x20000 {
     ; 初始化 QUSDSPI 前使用的代码，需放在内部 FLASH
 
+    ; ARM C lib
+    *armlib*
+
     *.o (RESET, +First)
     *(InRoot$$Sections)
 
+    ; startup
+    startup_*.o
+
+    retarget_io.o
+
     ; stm32 hal
-    stm32h7xx_hal.o (+RO)
-    stm32h7xx_hal_cortex.o (+RO)
-    stm32h7xx_hal_gpio.o (+RO)
-    stm32h7xx_hal_pwr.o (+RO)
-    stm32h7xx_hal_pwr_ex.o (+RO)
-    stm32h7xx_hal_qspi.o (+RO)
-    stm32h7xx_hal_rcc.o (+RO)
-    stm32h7xx_hal_rcc_ex.o (+RO)
-    stm32h7xx_hal_tim.o (+RO)
-    stm32h7xx_hal_tim_ex.o (+RO)
+    stm32h7xx_*.o (+RO)
 
     ; CubeMX
     main.o (+RO)
     quadspi.o (+RO)
     tim.o (+RO)
-    stm32h7xx_hal_msp.o (+RO)
-    stm32h7xx_hal_timebase_tim.o (+RO)
     stm32h7xx_it.o (+RO)
     system_stm32h7xx.o (+RO)
-
-    .ANY (+RO)
   }
   RW_DTCM 0x20000400 0xFC00 {
     .ANY (.DTCM)
@@ -63,28 +58,7 @@ LR_IROM1 0x08000000 0x20000 {
 
 LR_ROM2 0x90000000 0x1000000 {
   ER_ROM2 0x90000000 0x1000000 {
-    ; stm32 hal
-    stm32h7xx_hal_*.o (+RO)
-    stm32h7xx_ll_*.o (+RO)
-
-    ; CubeMX
-    adc.o (+RO)
-    bdma.o (+RO)
-    crc.o (+RO)
-    dac.o (+RO)
-    dfsdm.o (+RO)
-    dma.o (+RO)
-    gpio.o (+RO)
-    i2s.o (+RO)
-    mdma.o (+RO)
-    memorymap.o (+RO)
-    usart.o (+RO)
-
-    ; resource
-    BATTERY_LOW_PCM.o (+RO)
-    BLUETOOTH_CONNECT_PCM.o (+RO)
-    BLUETOOTH_DISCONNECT_PCM.o (+RO)
-    BOOT_PCM.o (+RO)
+    * (+RO)
   }
   ER_ITCM 0x00000000 0x10000 {
     .ANY (.ITCM)
