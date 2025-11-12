@@ -7,8 +7,8 @@
 #include "usbd_audio.h"
 #include "usbd_cdc_acm.h"
 
-#include "MKF360_config.h"
 #include "User/event_group.h"
+#include "main.h"
 
 #ifndef CONFIG_USBDEV_ADVANCE_DESC
 #error "Please enable CONFIG_USBDEV_ADVANCE_DESC macro."
@@ -36,11 +36,11 @@
 #define AUDIO_IN_FU_ID 0x02
 #define AUDIO_OUT_FU_ID 0x05
 
-#define AUDIO_SPEAKER_FREQ 16000U
+#define AUDIO_SPEAKER_FREQ MKF360_AUDIO_SAMPLE_RATE_HZ
 #define AUDIO_SPEAKER_FRAME_SIZE_BYTE 2u
 #define AUDIO_SPEAKER_RESOLUTION_BIT 16u
 #define AUDIO_SPEAKER_CHANNELS 1u
-#define AUDIO_MIC_FREQ 16000U
+#define AUDIO_MIC_FREQ MKF360_AUDIO_SAMPLE_RATE_HZ
 #define AUDIO_MIC_FRAME_SIZE_BYTE 2u
 #define AUDIO_MIC_RESOLUTION_BIT 16u
 #define AUDIO_MIC_CHANNELS 1u
@@ -225,11 +225,11 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t cdc_write_buffer[CDC_MAX_MPS];
 volatile bool cdc_ep_tx_busy_flag = false;
 volatile bool uac_ep_tx_busy_flag = false;
 
-// MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM 必须是 AUDIO_IN_PACKET 和 AUDIO_OUT_PACKET 的倍数
+// MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM 必须是 AUDIO_IN_PACKET 和 AUDIO_OUT_PACKET 的倍数
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
-    uac_read_buffer[2][MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+    uac_read_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
-    uac_write_buffer[2][MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+    uac_write_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_read_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_write_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t uac_recv_buffer_full;
@@ -387,14 +387,14 @@ void usbd_audio_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     uac_recv_buffer_full += AUDIO_OUT_PACKET;
 
-    if (uac_recv_buffer_full == MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_recv_buffer_full == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         uac_recv_buffer_full = 0;
         uac_read_idle_buffer_idx = uac_read_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
-    else if (uac_recv_buffer_full > MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_recv_buffer_full > MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)
@@ -412,14 +412,14 @@ void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     uac_send_buffer_sent += AUDIO_IN_PACKET;
 
-    if (uac_send_buffer_sent == MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_send_buffer_sent == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         uac_send_buffer_sent = 0;
         uac_write_idle_buffer_idx = uac_write_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
-    else if (uac_send_buffer_sent > MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_send_buffer_sent > MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)

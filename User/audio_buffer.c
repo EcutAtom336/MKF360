@@ -4,20 +4,20 @@
 
 #include "cmsis_compiler.h"
 
-#include "MKF360_config.h"
+#include "main.h"
 
 __attribute__((section(".bss.DTCM"))) static lwrb_t input_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t output_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t capture_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t playback_rb;
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    input_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    input_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    output_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    output_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 4U * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4U * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 
 static inline int32_t generic_read(lwrb_t *rb, void *const out, const size_t sample_num);
 static inline int32_t generic_write(lwrb_t *rb, const void *const in, const size_t sample_num);
