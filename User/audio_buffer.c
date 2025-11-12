@@ -15,7 +15,7 @@ __attribute__((section(".bss.DTCM"))) static uint8_t
 __attribute__((section(".bss.DTCM"))) static uint8_t
     output_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * 4U * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
     playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_FRAME_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 
