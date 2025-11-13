@@ -2,10 +2,7 @@
 #define __MIC_H__
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
-
-#include "MKF360_config.h"
 
 void mic_mdma_init();
 
