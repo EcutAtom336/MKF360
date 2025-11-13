@@ -213,7 +213,7 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     RCC_OscInitStruct.PLL.PLLM = 1;
-    RCC_OscInitStruct.PLL.PLLN = 100;
+    RCC_OscInitStruct.PLL.PLLN = 90;
     RCC_OscInitStruct.PLL.PLLP = 2;
     RCC_OscInitStruct.PLL.PLLQ = 2;
     RCC_OscInitStruct.PLL.PLLR = 2;
@@ -254,9 +254,9 @@ void PeriphCommonClock_Config(void)
     /** Initializes the peripherals clock
      */
     PeriphClkInitStruct.PeriphClockSelection =
-        RCC_PERIPHCLK_USB | RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_SPI3;
+        RCC_PERIPHCLK_USB | RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_SPI3 | RCC_PERIPHCLK_USART1;
     PeriphClkInitStruct.PLL2.PLL2M = 1;
-    PeriphClkInitStruct.PLL2.PLL2N = 32;
+    PeriphClkInitStruct.PLL2.PLL2N = 48;
     PeriphClkInitStruct.PLL2.PLL2P = 5;
     PeriphClkInitStruct.PLL2.PLL2Q = 2;
     PeriphClkInitStruct.PLL2.PLL2R = 5;
@@ -273,6 +273,7 @@ void PeriphCommonClock_Config(void)
     PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
     PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
     PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
+    PeriphClkInitStruct.Usart16ClockSelection = RCC_USART16CLKSOURCE_PLL3;
     PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
     PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL3;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
@@ -409,8 +410,8 @@ void MPU_Config(void)
     /** Initializes and configures the Region and the memory to be protected
      */
     MPU_InitStruct.Number = MPU_REGION_NUMBER1;
-    MPU_InitStruct.BaseAddress = 0x30040000;
-    MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
+    MPU_InitStruct.BaseAddress = 0x30000000;
+    MPU_InitStruct.Size = MPU_REGION_SIZE_128KB;
     MPU_InitStruct.SubRegionDisable = 0x0;
     MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
     MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;

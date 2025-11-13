@@ -41,9 +41,9 @@ void MX_TIM6_Init(void)
 
     /* USER CODE END TIM6_Init 1 */
     htim6.Instance = TIM6;
-    htim6.Init.Prescaler = 99;
+    htim6.Init.Prescaler = 49;
     htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim6.Init.Period = 125;
+    htim6.Init.Period = 75;
     htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
     {
@@ -73,9 +73,9 @@ void MX_TIM7_Init(void)
 
     /* USER CODE END TIM7_Init 1 */
     htim7.Instance = TIM7;
-    htim7.Init.Prescaler = 99;
+    htim7.Init.Prescaler = 49;
     htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim7.Init.Period = 125;
+    htim7.Init.Period = 75;
     htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
     {

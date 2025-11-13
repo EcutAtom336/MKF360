@@ -45,10 +45,6 @@
 #define AUDIO_MIC_RESOLUTION_BIT 16u
 #define AUDIO_MIC_CHANNELS 1u
 
-#define AUDIO_SAMPLE_FREQ(frq) (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
-
-#define AUDIO_SAMPLE_FREQ(frq) (uint8_t)(frq), (uint8_t)((frq >> 8)), (uint8_t)((frq >> 16))
-
 #define AUDIO_OUT_PACKET                                                                                               \
     ((uint32_t)((AUDIO_SPEAKER_FREQ * AUDIO_SPEAKER_FRAME_SIZE_BYTE * AUDIO_SPEAKER_CHANNELS) / 1000))
 #define AUDIO_IN_PACKET ((uint32_t)((AUDIO_MIC_FREQ * AUDIO_MIC_FRAME_SIZE_BYTE * AUDIO_MIC_CHANNELS) / 1000))
