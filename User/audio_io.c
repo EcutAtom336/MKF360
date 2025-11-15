@@ -252,16 +252,28 @@ void audio_io_handler()
             }
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
+    if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, false))
     {
-        interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        int32_t ret_int32 = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        {
+            event_group_check_event(EventGroup1, EventGroup1UacDataIn, true);
+        }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, true))
+    if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
-        interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        int32_t ret_int32 = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        {
+            event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
+        }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
+    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, false))
     {
-        mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4);
+        int32_t ret_int32 = mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4);
+        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4)
+        {
+            event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true);
+        }
     }
 }

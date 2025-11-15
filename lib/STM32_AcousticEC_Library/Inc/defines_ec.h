@@ -77,7 +77,7 @@ typedef float32_t spx_float_t;
 
 #define N_MIC_MAX 1
 #define N_SPEAKER_MAX 1
-#define SPX_EC_FS_16000
+#define SPX_EC_FS_48000
 
 #ifdef SPX_EC_FS_8000
   #define ECHO_BUFF 128U

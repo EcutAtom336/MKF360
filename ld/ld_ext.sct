@@ -27,12 +27,14 @@ LR_IROM1 0x08000000 0x20000 {
     .ANY (.DTCM)
     .ANY (.bss.DTCM)
     .ANY (.data.DTCM)
+    startup_*.o (STACK)
   }
   RW_AXI_SRAM 0x24000000 0x80000 {
     .ANY (.RAM_D1)
     .ANY (.bss.RAM_D1)
     .ANY (.data.RAM_D1)
     .ANY (+RW +ZI)
+    startup_*.o (HEAP)
   }
   RW_SRAM1 0x30000000 0x20000 {
     .ANY (.DMA_RAM_D2)
