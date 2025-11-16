@@ -60,9 +60,6 @@ extern "C"
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM (MKF360_AUDIO_SAMPLE_RATE_HZ / 50U)
-#define MKF360_AUDIO_SAMPLE_RATE_HZ (48000U)
-#define MKF360_AUDIO_SAMPLE_SIZE (2U)
 #define AUDIO_DAC_TRIG_TIM htim7
 #define AUDIO_ADC_TRIG_TIM htim6
 #define SPEAKER_EN_Pin GPIO_PIN_0
@@ -90,8 +87,11 @@ extern "C"
 #define BT_DISABLE__Pin GPIO_PIN_6
 #define BT_DISABLE__GPIO_Port GPIOB
 
-    /* USER CODE BEGIN Private defines */
-
+/* USER CODE BEGIN Private defines */
+#define MKF360_AUDIO_SAMPLE_RATE_HZ (48000U)
+#define MKF360_AUDIO_SAMPLE_NUM_1MS (MKF360_AUDIO_SAMPLE_RATE_HZ / 1000U)
+#define MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM (MKF360_AUDIO_SAMPLE_RATE_HZ / 50U)
+#define MKF360_AUDIO_SAMPLE_SIZE (2U)
     /* USER CODE END Private defines */
 
 #ifdef __cplusplus

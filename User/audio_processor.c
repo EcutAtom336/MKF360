@@ -12,9 +12,9 @@
 #include "audio/PCM_RES.h"
 #include "main.h"
 
-__attribute__((section(".bss.DTCM"))) static int16_t buffer1[MKF360_AUDIO_SAMPLE_RATE_HZ / 1000 * 4];
-__attribute__((section(".bss.DTCM"))) static int16_t buffer2[MKF360_AUDIO_SAMPLE_RATE_HZ / 1000];
-__attribute__((section(".bss.DTCM"))) static int16_t buffer3[MKF360_AUDIO_SAMPLE_RATE_HZ / 1000];
+__attribute__((section(".bss.DTCM"))) static int16_t buffer1[MKF360_AUDIO_SAMPLE_NUM_1MS * 4];
+__attribute__((section(".bss.DTCM"))) static int16_t buffer2[MKF360_AUDIO_SAMPLE_NUM_1MS];
+__attribute__((section(".bss.DTCM"))) static int16_t buffer3[MKF360_AUDIO_SAMPLE_NUM_1MS];
 
 __attribute__((section(".DTCM"))) static int16_t *speaker_read_buffer = &buffer1[0];
 
@@ -59,29 +59,30 @@ void audio_process()
     int32_t ret_int32 = 0;
 
     // 处理接口输入数据
-    ret_int32 = interface_in_read(speaker_read_buffer, MKF360_AUDIO_SAMPLE_RATE_HZ / 1000);
-    if (ret_int32 == MKF360_AUDIO_SAMPLE_RATE_HZ / 1000)
+    ret_int32 = interface_in_read(speaker_read_buffer, MKF360_AUDIO_SAMPLE_NUM_1MS);
+    if (ret_int32 == MKF360_AUDIO_SAMPLE_NUM_1MS)
     {
-        speaker_write(speaker_read_buffer, MKF360_AUDIO_SAMPLE_RATE_HZ / 1000);
+        speaker_write(speaker_read_buffer, MKF360_AUDIO_SAMPLE_NUM_1MS);
     }
 
     // 处理麦克风数据
     // 读取麦克风数据
     // 只使用了一个麦克风的数据
-    ret_int32 = mic_read(&interlaced_mic_data[0], MKF360_AUDIO_SAMPLE_RATE_HZ / 1000 * 4);
+    ret_int32 = mic_read(&interlaced_mic_data[0], MKF360_AUDIO_SAMPLE_NUM_1MS * 4);
 
-    if (ret_int32 == MKF360_AUDIO_SAMPLE_RATE_HZ / 1000 * 4)
+    if (ret_int32 == MKF360_AUDIO_SAMPLE_NUM_1MS * 4)
     {
-        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_RATE_HZ / 1000; ++i)
+        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_NUM_1MS; ++i)
         {
             interlaced_mic_data[i] = interlaced_mic_data[i * 4];
         }
 
         // AGC
         int64_t power_sum = 0;
-        arm_power_q15(&interlaced_mic_data[0], MKF360_AUDIO_SAMPLE_RATE_HZ / 1000, &power_sum);
+        arm_power_q15(&interlaced_mic_data[0], MKF360_AUDIO_SAMPLE_NUM_1MS, &power_sum);
         float32_t rms = 0.0F;
-        arm_sqrt_f32((float32_t)power_sum / ((float32_t)MKF360_AUDIO_SAMPLE_RATE_HZ / 1000), &rms);
+        const float32_t SAMPLE_NUM_1MS = (float32_t)MKF360_AUDIO_SAMPLE_RATE_HZ / 1000;
+        arm_sqrt_f32((float32_t)power_sum / SAMPLE_NUM_1MS, &rms);
         rms /= 32768.0f;
         const float32_t TARGET_RMS = 0.1f;
         if (rms > 1e-6)
@@ -89,11 +90,10 @@ void audio_process()
             float32_t adj = TARGET_RMS / rms;
             gain = gain * (1 - alpha) + adj * alpha;
         }
-        arm_scale_q15(&interlaced_mic_data[0], (q15_t)gain, 15, &interlaced_mic_data[0],
-                      MKF360_AUDIO_SAMPLE_RATE_HZ / 1000);
+        arm_scale_q15(&interlaced_mic_data[0], (q15_t)gain, 15, &interlaced_mic_data[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
 
         // AEC
-        arm_fill_q15(0, &buffer1_1ms[0], MKF360_AUDIO_SAMPLE_RATE_HZ / 1000);
+        arm_fill_q15(0, &buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
         ret_uint32 = AcousticEC_Data_Input(&interlaced_mic_data[0], &buffer1_1ms[0], &buffer2_1ms[0], &aec_handler);
         if (ret_uint32 == 1)
         {
@@ -112,7 +112,7 @@ void audio_process()
             printf("AEC input cnt: %u\n", aec_in_cnt);
         }
 
-        interface_out_write(&buffer2_1ms[0], MKF360_AUDIO_SAMPLE_RATE_HZ / 1000);
+        interface_out_write(&buffer2_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
     }
 }
 
