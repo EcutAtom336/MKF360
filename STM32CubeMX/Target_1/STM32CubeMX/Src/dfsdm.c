@@ -258,7 +258,10 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *dfsdm_filterHandle)
         hdma_dfsdm1_flt0.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
         hdma_dfsdm1_flt0.Init.Mode = DMA_CIRCULAR;
         hdma_dfsdm1_flt0.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-        hdma_dfsdm1_flt0.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+        hdma_dfsdm1_flt0.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+        hdma_dfsdm1_flt0.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+        hdma_dfsdm1_flt0.Init.MemBurst = DMA_MBURST_INC8;
+        hdma_dfsdm1_flt0.Init.PeriphBurst = DMA_PBURST_SINGLE;
         if (HAL_DMA_Init(&hdma_dfsdm1_flt0) != HAL_OK)
         {
             Error_Handler();
@@ -282,7 +285,10 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *dfsdm_filterHandle)
         hdma_dfsdm1_flt1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
         hdma_dfsdm1_flt1.Init.Mode = DMA_CIRCULAR;
         hdma_dfsdm1_flt1.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-        hdma_dfsdm1_flt1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+        hdma_dfsdm1_flt1.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+        hdma_dfsdm1_flt1.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+        hdma_dfsdm1_flt1.Init.MemBurst = DMA_MBURST_INC8;
+        hdma_dfsdm1_flt1.Init.PeriphBurst = DMA_PBURST_SINGLE;
         if (HAL_DMA_Init(&hdma_dfsdm1_flt1) != HAL_OK)
         {
             Error_Handler();
@@ -306,7 +312,10 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *dfsdm_filterHandle)
         hdma_dfsdm1_flt2.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
         hdma_dfsdm1_flt2.Init.Mode = DMA_CIRCULAR;
         hdma_dfsdm1_flt2.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-        hdma_dfsdm1_flt2.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+        hdma_dfsdm1_flt2.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+        hdma_dfsdm1_flt2.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+        hdma_dfsdm1_flt2.Init.MemBurst = DMA_MBURST_INC8;
+        hdma_dfsdm1_flt2.Init.PeriphBurst = DMA_PBURST_SINGLE;
         if (HAL_DMA_Init(&hdma_dfsdm1_flt2) != HAL_OK)
         {
             Error_Handler();
@@ -330,7 +339,10 @@ void HAL_DFSDM_FilterMspInit(DFSDM_Filter_HandleTypeDef *dfsdm_filterHandle)
         hdma_dfsdm1_flt3.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
         hdma_dfsdm1_flt3.Init.Mode = DMA_CIRCULAR;
         hdma_dfsdm1_flt3.Init.Priority = DMA_PRIORITY_VERY_HIGH;
-        hdma_dfsdm1_flt3.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+        hdma_dfsdm1_flt3.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+        hdma_dfsdm1_flt3.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+        hdma_dfsdm1_flt3.Init.MemBurst = DMA_MBURST_INC8;
+        hdma_dfsdm1_flt3.Init.PeriphBurst = DMA_PBURST_SINGLE;
         if (HAL_DMA_Init(&hdma_dfsdm1_flt3) != HAL_OK)
         {
             Error_Handler();
