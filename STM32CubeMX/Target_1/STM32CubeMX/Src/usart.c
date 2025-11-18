@@ -106,7 +106,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef *uartHandle)
         hdma_usart1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
         hdma_usart1_tx.Init.Mode = DMA_NORMAL;
         hdma_usart1_tx.Init.Priority = DMA_PRIORITY_LOW;
-        hdma_usart1_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+        hdma_usart1_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+        hdma_usart1_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+        hdma_usart1_tx.Init.MemBurst = DMA_MBURST_INC16;
+        hdma_usart1_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
         if (HAL_DMA_Init(&hdma_usart1_tx) != HAL_OK)
         {
             Error_Handler();
