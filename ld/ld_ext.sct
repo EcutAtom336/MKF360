@@ -23,7 +23,7 @@ LR_IROM1 0x08000000 0x20000 {
     stm32h7xx_it.o (+RO)
     system_stm32h7xx.o (+RO)
   }
-  RW_DTCM 0x20000400 0xFC00 {
+  RW_DTCM 0x20000400 0x20000 {
     .ANY (.DTCM)
     .ANY (.bss.DTCM)
     .ANY (.data.DTCM)
