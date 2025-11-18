@@ -1,4 +1,4 @@
-#include "User/mic.h"
+#include "User/audio_dfsdm.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -11,11 +11,12 @@
 #include "dfsdm.h"
 #include "main.h"
 
-__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t mic_data[2][2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
-__attribute__((section(".bss.DTCM"))) static volatile uint8_t mic1_idle_buffer;
-__attribute__((section(".bss.DTCM"))) static volatile uint8_t mic2_idle_buffer;
+__attribute__((
+    section(".bss.DMA_RAM_D2"))) static int16_t filter_dma_buffer[2][2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
+__attribute__((section(".bss.DTCM"))) static volatile uint8_t filter0_idle_buffer;
+__attribute__((section(".bss.DTCM"))) static volatile uint8_t filter1_idle_buffer;
 
-void mic_start()
+void audio_dfsdm_start()
 {
     HAL_StatusTypeDef ret_hal = HAL_OK;
     DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
@@ -25,7 +26,7 @@ void mic_start()
 
     for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
     {
-        ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], mic_data[i][0],
+        ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], filter_dma_buffer[i][0],
                                                       MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 2);
         if (ret_hal != HAL_OK)
         {
@@ -35,7 +36,7 @@ void mic_start()
     }
 }
 
-void mic_stop()
+void audio_dfsdm_stop()
 {
     HAL_StatusTypeDef ret_hal = HAL_OK;
     DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
@@ -54,27 +55,27 @@ void mic_stop()
     }
 }
 
-int16_t *mic_get_mic1_buffer_address()
+int16_t *audio_dfsdm_get_filter0_buffer_address()
 {
-    return &mic_data[0][mic1_idle_buffer][0];
+    return &filter_dma_buffer[0][filter0_idle_buffer][0];
 }
 
-int16_t *mic_get_mic2_buffer_address()
+int16_t *audio_dfsdm_get_filter1_buffer_address()
 {
-    return &mic_data[1][mic1_idle_buffer][0];
+    return &filter_dma_buffer[1][filter0_idle_buffer][0];
 }
 
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
     if (hdfsdm_filter == &hdfsdm1_filter0)
     {
-        mic1_idle_buffer = 0;
-        event_group_set_event(EventGroup1, EventGroup1Mic1DataReady);
+        filter0_idle_buffer = 0;
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady);
     }
     else if (hdfsdm_filter == &hdfsdm1_filter1)
     {
-        mic2_idle_buffer = 0;
-        event_group_set_event(EventGroup1, EventGroup1Mic2DataReady);
+        filter1_idle_buffer = 0;
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady);
     }
 }
 
@@ -82,12 +83,12 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
 {
     if (hdfsdm_filter == &hdfsdm1_filter0)
     {
-        mic1_idle_buffer = 1;
-        event_group_set_event(EventGroup1, EventGroup1Mic1DataReady);
+        filter0_idle_buffer = 1;
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady);
     }
     else if (hdfsdm_filter == &hdfsdm1_filter1)
     {
-        mic2_idle_buffer = 1;
-        event_group_set_event(EventGroup1, EventGroup1Mic2DataReady);
+        filter1_idle_buffer = 1;
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady);
     }
 }

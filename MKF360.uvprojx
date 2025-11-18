@@ -395,11 +395,6 @@
               <FilePath>.\User\retarget.c</FilePath>
             </File>
             <File>
-              <FileName>mic.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\User\mic.c</FilePath>
-            </File>
-            <File>
               <FileName>audio_iis.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\audio_iis.c</FilePath>
@@ -438,6 +433,11 @@
               <FileName>audio_processor.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\audio_processor.c</FilePath>
+            </File>
+            <File>
+              <FileName>audio_dfsdm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\audio_dfsdm.c</FilePath>
             </File>
           </Files>
         </Group>

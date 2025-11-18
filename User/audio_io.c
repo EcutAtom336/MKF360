@@ -7,7 +7,7 @@
 #include "User/audio_dac.h"
 #include "User/audio_iis.h"
 #include "User/event_group.h"
-#include "User/mic.h"
+#include "User/audio_dfsdm.h"
 #include "User/usb_desc.h"
 #include "main.h"
 #include "usbd_core.h"
@@ -179,7 +179,7 @@ void audio_io_handler()
     if (has_connect_event == true)
     {
         speaker_start();
-        mic_start();
+        audio_dfsdm_start();
         event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
     }
 
@@ -207,7 +207,7 @@ void audio_io_handler()
     if (has_disconnect_event == true)
     {
         audio_io_type = AudioIoTypeNone;
-        mic_stop();
+        audio_dfsdm_stop();
         speaker_stop();
         enable_all_audio_io();
         reset_audio_rb();
@@ -267,17 +267,17 @@ void audio_io_handler()
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1Mic1DataReady, true))
+    if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady, true))
     {
-        ret_int = mic1_write(mic_get_mic1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
         if (ret_int == 1)
         {
             printf("Mic1 data overwrite.\n");
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1Mic2DataReady, true))
+    if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady, true))
     {
-        ret_int = mic2_write(mic_get_mic2_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
         if (ret_int == 1)
         {
             printf("Mic2 data overwrite.\n");
