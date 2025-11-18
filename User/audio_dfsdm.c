@@ -63,7 +63,7 @@ int16_t *audio_dfsdm_get_filter0_buffer_address()
 
 int16_t *audio_dfsdm_get_filter1_buffer_address()
 {
-    return &filter_dma_buffer[1][filter0_idle_buffer][0];
+    return &filter_dma_buffer[1][filter1_idle_buffer][0];
 }
 
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
