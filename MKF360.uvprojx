@@ -495,11 +495,6 @@
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\usart.c</FilePath>
             </File>
             <File>
-              <FileName>mdma.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\mdma.c</FilePath>
-            </File>
-            <File>
               <FileName>dac.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\STM32CubeMX\Target_1\STM32CubeMX\Src\dac.c</FilePath>

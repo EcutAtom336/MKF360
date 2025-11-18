@@ -25,7 +25,6 @@
 #include "dma.h"
 #include "gpio.h"
 #include "i2s.h"
-#include "mdma.h"
 #include "quadspi.h"
 #include "tim.h"
 #include "usart.h"
@@ -135,7 +134,6 @@ int main(void)
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
     MX_DMA_Init();
-    MX_MDMA_Init();
     MX_BDMA_Init();
     MX_QUADSPI_Init();
     MX_DFSDM1_Init();

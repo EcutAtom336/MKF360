@@ -13,7 +13,8 @@ typedef enum
 
 typedef enum
 {
-    EventGroup1MicDataInterlaced,
+    EventGroup1Mic1DataReady,
+    EventGroup1Mic2DataReady,
 
     EventGroup1DacDmaBufferReady,
     EventGroup1IisDmaBufferReady,

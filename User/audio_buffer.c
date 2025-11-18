@@ -9,14 +9,17 @@
 
 __attribute__((section(".bss.DTCM"))) static lwrb_t input_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t output_rb;
-__attribute__((section(".bss.DTCM"))) static lwrb_t capture_rb;
+__attribute__((section(".bss.DTCM"))) static lwrb_t capture1_rb;
+__attribute__((section(".bss.DTCM"))) static lwrb_t capture2_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t playback_rb;
 __attribute__((section(".bss.DTCM"))) static uint8_t
     input_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
     output_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    capture_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4 * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    capture1_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+__attribute__((section(".bss.DTCM"))) static uint8_t
+    capture2_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
     playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 
@@ -27,7 +30,13 @@ void audio_buffer_init()
 {
     uint8_t ret_uint8 = 0;
 
-    ret_uint8 = lwrb_init(&capture_rb, &capture_rb_buf[0], sizeof(capture_rb_buf));
+    ret_uint8 = lwrb_init(&capture1_rb, &capture1_rb_buf[0], sizeof(capture1_rb_buf));
+    if (ret_uint8 != 1U)
+    {
+        printf("");
+    }
+
+    ret_uint8 = lwrb_init(&capture2_rb, &capture2_rb_buf[0], sizeof(capture2_rb_buf));
     if (ret_uint8 != 1U)
     {
         printf("");
@@ -52,14 +61,24 @@ void audio_buffer_init()
     }
 }
 
-int mic_read(void *const out, const size_t sample_num)
+int mic1_read(void *const out, const size_t sample_num)
 {
-    return generic_read(&capture_rb, out, sample_num);
+    return generic_read(&capture1_rb, out, sample_num);
 }
 
-int mic_write(const void *const in, const size_t sample_num)
+int mic1_write(const void *const in, const size_t sample_num)
 {
-    return generic_write(&capture_rb, in, sample_num);
+    return generic_write(&capture1_rb, in, sample_num);
+}
+
+int mic2_read(void *const out, const size_t sample_num)
+{
+    return generic_read(&capture2_rb, out, sample_num);
+}
+
+int mic2_write(const void *const in, const size_t sample_num)
+{
+    return generic_write(&capture2_rb, in, sample_num);
 }
 
 int speaker_read(void *const out, const size_t sample_num)
@@ -94,7 +113,8 @@ int interface_out_write(const void *const in, const size_t sample_num)
 
 void reset_audio_rb()
 {
-    lwrb_reset(&capture_rb);
+    lwrb_reset(&capture1_rb);
+    lwrb_reset(&capture2_rb);
     lwrb_reset(&playback_rb);
     lwrb_reset(&input_rb);
     lwrb_reset(&output_rb);

@@ -5,8 +5,11 @@
 
 void audio_buffer_init();
 
-int mic_read(void *const out, const size_t sample_num);
-int mic_write(const void *const in, const size_t sample_num);
+int mic1_read(void *const out, const size_t sample_num);
+int mic1_write(const void *const in, const size_t sample_num);
+
+int mic2_read(void *const out, const size_t sample_num);
+int mic2_write(const void *const in, const size_t sample_num);
 
 int speaker_read(void *const out, const size_t sample_num);
 int speaker_write(const void *const in, const size_t sample_num);

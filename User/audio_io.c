@@ -142,7 +142,6 @@ static inline void enable_all_audio_io()
 
 void audio_io_init()
 {
-    mic_mdma_init();
     audio_buffer_init();
     enable_all_audio_io();
 }
@@ -268,12 +267,20 @@ void audio_io_handler()
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
+    if (event_group_check_event(EventGroup1, EventGroup1Mic1DataReady, true))
     {
-        ret_int = mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4);
+        ret_int = mic1_write(mic_get_mic1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
         if (ret_int == 1)
         {
-            printf("Mic data overwrite.\n");
+            printf("Mic1 data overwrite.\n");
+        }
+    }
+    if (event_group_check_event(EventGroup1, EventGroup1Mic2DataReady, true))
+    {
+        ret_int = mic2_write(mic_get_mic2_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int == 1)
+        {
+            printf("Mic2 data overwrite.\n");
         }
     }
 }

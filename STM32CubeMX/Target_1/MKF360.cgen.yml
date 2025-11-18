@@ -21,7 +21,6 @@ generator-import:
         - file: ./STM32CubeMX/Src/dfsdm.c
         - file: ./STM32CubeMX/Src/dma.c
         - file: ./STM32CubeMX/Src/i2s.c
-        - file: ./STM32CubeMX/Src/mdma.c
         - file: ./STM32CubeMX/Src/quadspi.c
         - file: ./STM32CubeMX/Src/tim.c
         - file: ./STM32CubeMX/Src/usart.c

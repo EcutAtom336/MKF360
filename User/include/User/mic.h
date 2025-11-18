@@ -4,14 +4,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void mic_mdma_init();
-
 void mic_start();
 
 void mic_stop();
 
-bool mic_verify_interlaced_data();
+int16_t *mic_get_mic1_buffer_address();
 
-int16_t *get_mic_interlaces_data_address();
+int16_t *mic_get_mic2_buffer_address();
 
 #endif // !__MIC_H__
