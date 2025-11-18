@@ -223,9 +223,9 @@ volatile bool uac_ep_tx_busy_flag = false;
 
 // MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM 必须是 AUDIO_IN_PACKET 和 AUDIO_OUT_PACKET 的倍数
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
-    uac_read_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+    uac_read_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
-    uac_write_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE];
+    uac_write_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE];
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_read_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_write_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t uac_recv_buffer_full;
@@ -383,14 +383,16 @@ void usbd_audio_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     uac_recv_buffer_full += AUDIO_OUT_PACKET;
 
-    if (uac_recv_buffer_full == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_recv_buffer_full ==
+        MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
     {
         uac_recv_buffer_full = 0;
         uac_read_idle_buffer_idx = uac_read_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
-    else if (uac_recv_buffer_full > MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_recv_buffer_full >
+             MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)
@@ -408,14 +410,16 @@ void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     uac_send_buffer_sent += AUDIO_IN_PACKET;
 
-    if (uac_send_buffer_sent == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_send_buffer_sent ==
+        MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
     {
         uac_send_buffer_sent = 0;
         uac_write_idle_buffer_idx = uac_write_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
-    else if (uac_send_buffer_sent > MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_send_buffer_sent >
+             MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
     {
         __disable_irq();
         while (1)

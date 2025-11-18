@@ -24,17 +24,19 @@ typedef struct
     uint16_t ch2;
 } DacFrame_t;
 
-__attribute__((section(".bss.DMA_RAM_D2")))
-__attribute__((aligned(1024))) static uint32_t dac_dma_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
+__attribute__((section(".bss.DMA_RAM_D2"))) __attribute__((aligned(
+    1024))) static uint32_t dac_dma_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 
 __attribute__((section(".bss.DTCM"))) static uint32_t flags;
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t idle_buffer;
 
 static void dac_start()
 {
-    arm_fill_q31((32768 << 16) + 32768, (int32_t *)&dac_dma_buffer[0][0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 2);
-    HAL_StatusTypeDef ret_hal = HAL_DACEx_DualStart_DMA(&hdac1, DAC_CHANNEL_1, &dac_dma_buffer[0][0],
-                                                        MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 2U, DAC_ALIGN_12B_L);
+    arm_fill_q31((32768 << 16) + 32768, (int32_t *)&dac_dma_buffer[0][0],
+                 MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
+    HAL_StatusTypeDef ret_hal = HAL_DACEx_DualStart_DMA(
+        &hdac1, DAC_CHANNEL_1, &dac_dma_buffer[0][0],
+        MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2U, DAC_ALIGN_12B_L);
     if (ret_hal != HAL_OK)
     {
         Error_Handler();
@@ -103,7 +105,7 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
             printf("dac ch1 not enable.");
             return;
         }
-        for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM; ++i)
+        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST; ++i)
         {
             ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch1 = (uint16_t)((int32_t)data[i] + 32768U);
         }
@@ -115,7 +117,7 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
             printf("dac ch2 not enable.");
             return;
         }
-        for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM; ++i)
+        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST; ++i)
         {
             ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch2 = (uint16_t)((int32_t)data[i] + 32768U);
         }
@@ -126,7 +128,8 @@ void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     if (hdac == &hdac1)
     {
-        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0],
+                     MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 0;
         event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
     }
@@ -136,7 +139,8 @@ void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     if (hdac == &hdac1)
     {
-        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0],
+                     MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 1;
         event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
     }

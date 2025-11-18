@@ -11,8 +11,8 @@
 #include "dfsdm.h"
 #include "main.h"
 
-__attribute__((
-    section(".bss.DMA_RAM_D2"))) static int16_t filter_dma_buffer[2][2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
+__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
+    filter_dma_buffer[2][2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 __attribute__((section(".bss.DTCM"))) static volatile uint8_t filter0_idle_buffer;
 __attribute__((section(".bss.DTCM"))) static volatile uint8_t filter1_idle_buffer;
 
@@ -26,8 +26,9 @@ void audio_dfsdm_start()
 
     for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
     {
-        ret_hal = HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], filter_dma_buffer[i][0],
-                                                      MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 2);
+        ret_hal =
+            HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], filter_dma_buffer[i][0],
+                                                MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
         if (ret_hal != HAL_OK)
         {
             printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);

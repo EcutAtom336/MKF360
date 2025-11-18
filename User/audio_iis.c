@@ -10,18 +10,18 @@
 #include "i2s.h"
 #include "main.h"
 
-__attribute__((
-    section(".bss.DMA_RAM_D2"))) static int16_t iis_tx_dma_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
-__attribute__((
-    section(".bss.DMA_RAM_D2"))) static int16_t iis_rx_dma_buffer[2][MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
+__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
+    iis_tx_dma_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
+__attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
+    iis_rx_dma_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t idle_buffer;
 
 void iis_start()
 {
-    HAL_StatusTypeDef ret_hal = HAL_I2SEx_TransmitReceive_DMA(&hi2s3, (uint16_t *)&iis_tx_dma_buffer[0][0],
-                                                              (uint16_t *)&iis_rx_dma_buffer[0][0],
-                                                              MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 2);
+    HAL_StatusTypeDef ret_hal = HAL_I2SEx_TransmitReceive_DMA(
+        &hi2s3, (uint16_t *)&iis_tx_dma_buffer[0][0], (uint16_t *)&iis_rx_dma_buffer[0][0],
+        MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
     if (ret_hal != HAL_OK)
     {
         Error_Handler();
@@ -50,12 +50,14 @@ int16_t *iis_get_rx_idle_buffer_address()
 
 void iis_tx_write(const int16_t *buffer)
 {
-    arm_copy_q15(buffer, &iis_tx_dma_buffer[idle_buffer][0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+    arm_copy_q15(buffer, &iis_tx_dma_buffer[idle_buffer][0],
+                 MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
 }
 
 void iis_rx_read(int16_t *buffer)
 {
-    arm_copy_q15(&iis_rx_dma_buffer[idle_buffer][0], buffer, MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+    arm_copy_q15(&iis_rx_dma_buffer[idle_buffer][0], buffer,
+                 MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
 }
 
 void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s)

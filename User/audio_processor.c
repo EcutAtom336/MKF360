@@ -54,19 +54,19 @@ void audio_process()
     int32_t ret_int32 = 0;
 
     // 处理接口输入数据
-    ret_int32 = interface_in_read(&buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
-    if (ret_int32 == MKF360_AUDIO_SAMPLE_NUM_1MS)
+    ret_int32 = interface_in_read(&buffer1_1ms[0], 1);
+    if (ret_int32 == 1)
     {
-        speaker_write(&buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
+        speaker_write(&buffer1_1ms[0], 1);
     }
 
     // 处理麦克风数据
     // 读取麦克风数据
     // 只使用了一个麦克风的数据
-    ret_int32 = mic2_read(&buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
-    ret_int32 = mic1_read(&buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
+    ret_int32 = mic2_read(&buffer1_1ms[0], 1);
+    ret_int32 = mic1_read(&buffer1_1ms[0], 1);
 
-    if (ret_int32 == MKF360_AUDIO_SAMPLE_NUM_1MS)
+    if (ret_int32 == 1)
     {
         // AGC
         int16_t *const AGC_IN = &buffer1_1ms[0];
@@ -108,7 +108,7 @@ void audio_process()
             printf("AEC input cnt: %u\n", aec_in_cnt);
         }
 
-        interface_out_write(AEC_OUT, MKF360_AUDIO_SAMPLE_NUM_1MS);
+        interface_out_write(AEC_OUT, 1);
     }
 }
 

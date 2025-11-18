@@ -5,9 +5,9 @@
 #include "User/audio_adc.h"
 #include "User/audio_buffer.h"
 #include "User/audio_dac.h"
+#include "User/audio_dfsdm.h"
 #include "User/audio_iis.h"
 #include "User/event_group.h"
-#include "User/audio_dfsdm.h"
 #include "User/usb_desc.h"
 #include "main.h"
 #include "usbd_core.h"
@@ -221,31 +221,32 @@ void audio_io_handler()
     {
         if (audio_io_type == AudioIoTypeBt)
         {
-            interface_out_read(iis_get_tx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-            interface_in_write(iis_get_rx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+            interface_out_read(iis_get_tx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+            interface_in_write(iis_get_rx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
     {
         if (audio_io_type == AudioIoTypeAux)
         {
-            interface_in_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+            interface_in_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
     {
-        __attribute__((section(".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
+        __attribute__((section(
+            ".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS];
 
-        ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-        if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
         {
             audio_dac_write_ch(&tmp[0], DacCh1);
         }
 
         if (audio_io_type == AudioIoTypeAux)
         {
-            ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-            if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+            ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+            if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
             {
                 audio_dac_write_ch(&tmp[0], DacCh2);
             }
@@ -253,7 +254,7 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
     {
-        ret_int = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        ret_int = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == 1)
         {
             printf("Interface in data overwrite.\n");
@@ -261,15 +262,15 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
-        ret_int = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-        if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        ret_int = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
         {
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady, true))
     {
-        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == 1)
         {
             printf("Mic1 data overwrite.\n");
@@ -277,7 +278,7 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady, true))
     {
-        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == 1)
         {
             printf("Mic2 data overwrite.\n");

@@ -13,18 +13,23 @@ __attribute__((section(".bss.DTCM"))) static lwrb_t capture1_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t capture2_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t playback_rb;
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    input_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    input_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
+                 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    output_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    output_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
+                  1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    capture1_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    capture1_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
+                    1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    capture2_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    capture2_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
+                    1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
-    playback_rb_buf[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
+    playback_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
+                    1U];
 
-static inline int generic_read(lwrb_t *rb, void *const out, const size_t sample_num);
-static inline int generic_write(lwrb_t *rb, const void *const in, const size_t sample_num);
+static inline int generic_read(lwrb_t *rb, void *const out, const size_t ms);
+static inline int generic_write(lwrb_t *rb, const void *const in, const size_t ms);
 
 void audio_buffer_init()
 {
@@ -61,54 +66,54 @@ void audio_buffer_init()
     }
 }
 
-int mic1_read(void *const out, const size_t sample_num)
+int mic1_read(void *const out, const size_t ms)
 {
-    return generic_read(&capture1_rb, out, sample_num);
+    return generic_read(&capture1_rb, out, ms);
 }
 
-int mic1_write(const void *const in, const size_t sample_num)
+int mic1_write(const void *const in, const size_t ms)
 {
-    return generic_write(&capture1_rb, in, sample_num);
+    return generic_write(&capture1_rb, in, ms);
 }
 
-int mic2_read(void *const out, const size_t sample_num)
+int mic2_read(void *const out, const size_t ms)
 {
-    return generic_read(&capture2_rb, out, sample_num);
+    return generic_read(&capture2_rb, out, ms);
 }
 
-int mic2_write(const void *const in, const size_t sample_num)
+int mic2_write(const void *const in, const size_t ms)
 {
-    return generic_write(&capture2_rb, in, sample_num);
+    return generic_write(&capture2_rb, in, ms);
 }
 
-int speaker_read(void *const out, const size_t sample_num)
+int speaker_read(void *const out, const size_t ms)
 {
-    return generic_read(&playback_rb, out, sample_num);
+    return generic_read(&playback_rb, out, ms);
 }
 
-int speaker_write(const void *const in, const size_t sample_num)
+int speaker_write(const void *const in, const size_t ms)
 {
-    return generic_write(&playback_rb, in, sample_num);
+    return generic_write(&playback_rb, in, ms);
 }
 
-int interface_in_read(void *const out, const size_t sample_num)
+int interface_in_read(void *const out, const size_t ms)
 {
-    return generic_read(&input_rb, out, sample_num);
+    return generic_read(&input_rb, out, ms);
 }
 
-int interface_in_write(const void *const in, const size_t sample_num)
+int interface_in_write(const void *const in, const size_t ms)
 {
-    return generic_write(&input_rb, in, sample_num);
+    return generic_write(&input_rb, in, ms);
 }
 
-int interface_out_read(void *const out, const size_t sample_num)
+int interface_out_read(void *const out, const size_t ms)
 {
-    return generic_read(&output_rb, out, sample_num);
+    return generic_read(&output_rb, out, ms);
 }
 
-int interface_out_write(const void *const in, const size_t sample_num)
+int interface_out_write(const void *const in, const size_t ms)
 {
-    return generic_write(&output_rb, in, sample_num);
+    return generic_write(&output_rb, in, ms);
 }
 
 void reset_audio_rb()
@@ -120,20 +125,20 @@ void reset_audio_rb()
     lwrb_reset(&output_rb);
 }
 
-static inline int generic_read(lwrb_t *rb, void *const out, const size_t sample_num)
+static inline int generic_read(lwrb_t *rb, void *const out, const size_t ms)
 {
-    uint32_t read_size = sample_num * MKF360_AUDIO_SAMPLE_SIZE;
+    uint32_t read_size = ms * MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_SAMPLE_SIZE;
     if (lwrb_get_full(rb) < read_size)
     {
         return -1;
     }
     lwrb_read(rb, out, read_size);
-    return sample_num;
+    return ms;
 }
 
-static inline int generic_write(lwrb_t *rb, const void *const in, const size_t sample_num)
+static inline int generic_write(lwrb_t *rb, const void *const in, const size_t ms)
 {
-    uint32_t write_size = sample_num * MKF360_AUDIO_SAMPLE_SIZE;
+    uint32_t write_size = ms * MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_SAMPLE_SIZE;
     bool is_overwrite = lwrb_get_free(rb) < write_size ? true : false;
     lwrb_overwrite(rb, in, write_size);
     return is_overwrite ? 1 : 0;
