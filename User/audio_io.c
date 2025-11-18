@@ -215,7 +215,7 @@ void audio_io_handler()
         event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
     }
 
-    int32_t ret_int32 = 0;
+    int ret_int = 0;
 
     // 路由底层接口数据
     if (event_group_check_event(EventGroup1, EventGroup1IisDmaBufferReady, true))
@@ -237,43 +237,43 @@ void audio_io_handler()
     {
         __attribute__((section(".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM];
 
-        ret_int32 = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
         {
             audio_dac_write_ch(&tmp[0], DacCh1);
         }
 
         if (audio_io_type == AudioIoTypeAux)
         {
-            ret_int32 = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-            if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+            ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+            if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
             {
                 audio_dac_write_ch(&tmp[0], DacCh2);
             }
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, false))
+    if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
     {
-        int32_t ret_int32 = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        ret_int = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int == 1)
         {
-            event_group_check_event(EventGroup1, EventGroup1UacDataIn, true);
+            printf("Interface in data overwrite.\n");
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
-        int32_t ret_int32 = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
-        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
+        ret_int = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM);
+        if (ret_int == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM)
         {
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, false))
+    if (event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true))
     {
-        int32_t ret_int32 = mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4);
-        if (ret_int32 == MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4)
+        ret_int = mic_write(get_mic_interlaces_data_address(), MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM * 4);
+        if (ret_int == 1)
         {
-            event_group_check_event(EventGroup1, EventGroup1MicDataInterlaced, true);
+            printf("Mic data overwrite.\n");
         }
     }
 }
