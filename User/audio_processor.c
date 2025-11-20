@@ -20,7 +20,7 @@ __attribute__((section(".bss.DTCM"))) static uint32_t aec_in_cnt;
 __attribute__((section(".bss.DTCM"))) static uint32_t aec_run_cnt;
 
 __attribute__((section(".DTCM"))) static float32_t gain = 1.0f;
-__attribute__((section(".DTCM"))) static float32_t alpha = 0.01f;
+__attribute__((section(".DTCM"))) static float32_t alpha = 0.1f;
 
 __attribute__((section(".DTCM"))) static AcousticEC_Handler_t aec_handler = {
     .tail_length = 512,
@@ -68,22 +68,8 @@ void audio_process()
 
     if (ret_int32 == 1)
     {
-        // AGC
-        int16_t *const AGC_IN = &buffer1_1ms[0];
-        int16_t *const AGC_OUT = &buffer1_1ms[0];
-        int64_t power_sum = 0;
-        arm_power_q15(AGC_IN, MKF360_AUDIO_SAMPLE_NUM_1MS, &power_sum);
-        float32_t rms = 0.0F;
-        const float32_t SAMPLE_NUM_1MS = (float32_t)MKF360_AUDIO_SAMPLE_RATE_HZ / 1000;
-        arm_sqrt_f32((float32_t)power_sum / SAMPLE_NUM_1MS, &rms);
-        rms /= 32768.0f;
-        const float32_t TARGET_RMS = 0.1f;
-        if (rms > 1e-6)
-        {
-            float32_t adj = TARGET_RMS / rms;
-            gain = gain * (1 - alpha) + adj * alpha;
-        }
-        arm_scale_q15(AGC_IN, (q15_t)gain, 15, AGC_OUT, MKF360_AUDIO_SAMPLE_NUM_1MS);
+        // 增益补偿
+        arm_scale_q15(&buffer1_1ms[0], 16, 15, &buffer1_1ms[0], MKF360_AUDIO_SAMPLE_NUM_1MS);
 
         // AEC
         int16_t *const AEC_IN = &buffer1_1ms[0];
@@ -101,6 +87,7 @@ void audio_process()
             if (++aec_run_cnt % 1000 == 0)
             {
                 printf("AEC run cnt: %u\n", aec_run_cnt);
+                printf("gain: %f\n", gain);
             }
         }
         if (++aec_in_cnt % 1000 == 0)
@@ -108,7 +95,33 @@ void audio_process()
             printf("AEC input cnt: %u\n", aec_in_cnt);
         }
 
-        interface_out_write(AEC_OUT, 1);
+        // AGC
+        int16_t *const AGC_IN = AEC_OUT;
+        int16_t *const AGC_OUT = AEC_REF;
+        // 计算 RMS 和归一化 RMS
+        int64_t power_sum = 0;
+        arm_power_q15(AGC_IN, MKF360_AUDIO_SAMPLE_NUM_1MS, &power_sum);
+        const float32_t SAMPLE_NUM_1MS = (float32_t)MKF360_AUDIO_SAMPLE_RATE_HZ / 1000;
+        const float32_t POWER_MEAN = power_sum / SAMPLE_NUM_1MS;
+        float32_t rms = 0.0F;
+        arm_sqrt_f32(POWER_MEAN, &rms);
+        const float32_t NORMALIZED_RMS = rms / 32768.0F;
+        // 计算增益限值
+        int16_t abs_max = 0;
+        arm_absmax_no_idx_q15(AGC_IN, MKF360_AUDIO_SAMPLE_NUM_1MS, &abs_max);
+        abs_max = abs(abs_max);
+        const float32_t GAIN_LIMIT = (32768.0F * 0.2F) / abs_max;
+        // 调整增益
+        const float32_t TARGET_NORMALIZED_RMS = 1e-2;
+        if (NORMALIZED_RMS > 1e-5)
+        {
+            float32_t adj = TARGET_NORMALIZED_RMS / NORMALIZED_RMS;
+            gain = fmin(gain * (1 - alpha) + adj * alpha, fmin(GAIN_LIMIT, 50));
+        }
+        // 应用增益
+        arm_scale_q15(AGC_IN, (q15_t)gain, 15, AGC_OUT, MKF360_AUDIO_SAMPLE_NUM_1MS);
+
+        interface_out_write(AGC_OUT, 1);
     }
 }
 
@@ -139,7 +152,7 @@ static int32_t aec_init()
         .preprocess_state = ACOUSTIC_EC_PREPROCESS_ENABLE,
         .AGC_value = 0,
         .residual_echo_remove = 1,     // Default: 1
-        .noise_suppress_default = -15, // Default: -15
+        .noise_suppress_default = -20, // Default: -15
         .echo_suppress_default = -40,  // Default: -40
         .echo_suppress_active = -15,   // Default: -15
     };

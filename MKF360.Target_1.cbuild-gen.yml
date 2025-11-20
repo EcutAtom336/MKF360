@@ -18,12 +18,6 @@ build-gen:
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/include
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/include
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticBF_Library/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticSL_Library/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/PDM/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/SVC/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/Common/Inc
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/SDR/Inc/
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
@@ -107,8 +101,6 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/retarget.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/mic.c
-          category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_iis.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_dac.c
@@ -124,6 +116,8 @@ build-gen:
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_buffer.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_processor.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_dfsdm.c
           category: sourceC
     - group: CherryUSB
       files:
@@ -167,19 +161,3 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/smallft.c
           category: sourceC
-    - group: StAsl
-      files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticSL_Library/Src/AcousticSL.c
-          category: sourceC
-    - group: StAbf
-      files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticBF_Library/Src/acousticBF.c
-          category: sourceC
-    - group: PDM
-      files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/PDM/Lib/libPDMFilter_CM7_Keil_wc16.lib
-          category: library
-    - group: SVC
-      files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/SVC/Lib/SVC_CM7_Keil.lib
-          category: library
