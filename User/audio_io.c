@@ -237,6 +237,9 @@ void audio_io_handler()
         __attribute__((section(
             ".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS];
 
+        audio_dac_read_ch(&tmp[0], DacCh1);
+        feedback_write(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST, audio_dac_get_send_complete_timestamp());
+
         ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
         {
@@ -270,7 +273,8 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady, true))
     {
-        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST,
+                             audio_dfsdm_get_filter0_latest_timestamp());
         if (ret_int == 1)
         {
             printf("Mic1 data overwrite.\n");
@@ -278,7 +282,8 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady, true))
     {
-        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST,
+                             audio_dfsdm_get_filter1_latest_timestamp());
         if (ret_int == 1)
         {
             printf("Mic2 data overwrite.\n");

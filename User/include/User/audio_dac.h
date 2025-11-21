@@ -27,6 +27,10 @@ typedef enum
  */
 void audio_dac_write_ch(const int16_t *data, const DacCh_t ch);
 
+void audio_dac_read_ch(int16_t *const data, const DacCh_t ch);
+
+uint32_t audio_dac_get_send_complete_timestamp();
+
 void audio_dac_ctl(const AudioDacCmd_t cmd);
 
 #endif // !__AUDIO_DAC_H__
