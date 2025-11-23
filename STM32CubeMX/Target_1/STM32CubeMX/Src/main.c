@@ -162,7 +162,10 @@ int main(void)
 
         audio_io_handler();
 
-        audio_process();
+        if (audio_io_is_connected())
+        {
+            audio_process();
+        }
 
         if (event_group_check_event(EventGroup1, EventGroup1AudioIoConnected, true))
         {

@@ -338,9 +338,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>-DLWRB_DISABLE_ATOMIC</MiscControls>
-              <Define>LWRB_DEV</Define>
+              <Define>LWRB_DEV HAVE_CONFIG_H</Define>
               <Undefine></Undefine>
-              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include;.\audio\include;.\lib\lwrb-3.2.0\lwrb\src\include;.\lib\STM32_AcousticEC_Library\Inc</IncludePath>
+              <IncludePath>.\lib\CherryUSB-1.5.2\core;.\lib\CherryUSB-1.5.2\common;.\lib\CherryUSB-1.5.2\port\dwc2;.\lib\CherryUSB-1.5.2\class\audio;.\lib\CherryUSB-1.5.2\class\cdc;.\User\include;.\audio\include;.\lib\lwrb-3.2.0\lwrb\src\include;.\lib\speexdsp\include\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -757,7 +757,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>StAec</GroupName>
+          <GroupName>SpeexDSP</GroupName>
           <GroupOption>
             <CommonProperty>
               <UseCPPCompiler>0</UseCPPCompiler>
@@ -778,7 +778,7 @@
             <GroupArmAds>
               <Cads>
                 <interw>2</interw>
-                <Optim>5</Optim>
+                <Optim>2</Optim>
                 <oTime>2</oTime>
                 <SplitLS>2</SplitLS>
                 <OneElfS>2</OneElfS>
@@ -797,7 +797,7 @@
                 <v6LangP>0</v6LangP>
                 <vShortEn>2</vShortEn>
                 <vShortWch>2</vShortWch>
-                <v6Lto>0</v6Lto>
+                <v6Lto>2</v6Lto>
                 <v6WtE>2</v6WtE>
                 <v6Rtti>2</v6Rtti>
                 <VariousControls>
@@ -829,34 +829,59 @@
           </GroupOption>
           <Files>
             <File>
-              <FileName>acousticEC.c</FileName>
+              <FileName>buffer.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\acousticEC.c</FilePath>
+              <FilePath>.\lib\speexdsp\libspeexdsp\buffer.c</FilePath>
             </File>
             <File>
-              <FileName>echo.c</FileName>
+              <FileName>fftwrap.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\echo.c</FilePath>
-            </File>
-            <File>
-              <FileName>Echo_library.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\Echo_library.c</FilePath>
+              <FilePath>.\lib\speexdsp\libspeexdsp\fftwrap.c</FilePath>
             </File>
             <File>
               <FileName>filterbank.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\filterbank.c</FilePath>
+              <FilePath>.\lib\speexdsp\libspeexdsp\filterbank.c</FilePath>
+            </File>
+            <File>
+              <FileName>jitter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\jitter.c</FilePath>
+            </File>
+            <File>
+              <FileName>kiss_fft.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\kiss_fft.c</FilePath>
+            </File>
+            <File>
+              <FileName>kiss_fftr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\kiss_fftr.c</FilePath>
+            </File>
+            <File>
+              <FileName>mdf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\mdf.c</FilePath>
             </File>
             <File>
               <FileName>preprocess.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\preprocess.c</FilePath>
+              <FilePath>.\lib\speexdsp\libspeexdsp\preprocess.c</FilePath>
+            </File>
+            <File>
+              <FileName>resample.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\resample.c</FilePath>
+            </File>
+            <File>
+              <FileName>scal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\speexdsp\libspeexdsp\scal.c</FilePath>
             </File>
             <File>
               <FileName>smallft.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\lib\STM32_AcousticEC_Library\Src\smallft.c</FilePath>
+              <FilePath>.\lib\speexdsp\libspeexdsp\smallft.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -17,7 +17,7 @@ build-gen:
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/include
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/audio/include
     - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/include
-    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Inc
+    - D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/include
   components:
     - component: ARM::CMSIS-Compiler:CORE@1.1.0
       from-pack: ARM::CMSIS-Compiler@2.1.0
@@ -147,17 +147,27 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/lwrb-3.2.0/lwrb/src/lwrb/lwrb_ex.c
           category: sourceC
-    - group: StAec
+    - group: SpeexDSP
       files:
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/acousticEC.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/buffer.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/echo.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/fftwrap.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/Echo_library.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/filterbank.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/filterbank.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/jitter.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/preprocess.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/kiss_fft.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/STM32_AcousticEC_Library/Src/smallft.c
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/kiss_fftr.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/mdf.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/preprocess.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/resample.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/scal.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/lib/speexdsp/libspeexdsp/smallft.c
           category: sourceC

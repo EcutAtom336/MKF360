@@ -241,7 +241,7 @@ void audio_io_handler()
         feedback_write(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST, audio_dac_get_send_complete_timestamp());
 
         ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-        if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
+        if (ret_int == 0)
         {
             audio_dac_write_ch(&tmp[0], DacCh1);
         }
@@ -249,7 +249,7 @@ void audio_io_handler()
         if (audio_io_type == AudioIoTypeAux)
         {
             ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-            if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
+            if (ret_int == 0)
             {
                 audio_dac_write_ch(&tmp[0], DacCh2);
             }
@@ -266,7 +266,7 @@ void audio_io_handler()
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
         ret_int = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-        if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
+        if (ret_int == 0)
         {
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
