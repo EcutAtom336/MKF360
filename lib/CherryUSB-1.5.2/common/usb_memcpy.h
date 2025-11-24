@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "User/my_memcpy.h"
+
 #define ALIGN_UP_DWORD(x) ((uint32_t)(uintptr_t)(x) & (sizeof(uint32_t) - 1))
 
 static inline void dword2array(char *addr, uint32_t w)
@@ -90,7 +92,7 @@ static inline void *usb_memcpy(void *s1, const void *s2, size_t n)
 }
 
 #ifndef CONFIG_USB_MEMCPY_DISABLE
-#define memcpy usb_memcpy
+#define memcpy my_memcpy
 #endif
 
 #endif
