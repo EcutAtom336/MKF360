@@ -439,6 +439,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\audio_dfsdm.c</FilePath>
             </File>
+            <File>
+              <FileName>my_memcpy.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\my_memcpy.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

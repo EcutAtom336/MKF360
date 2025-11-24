@@ -33,11 +33,11 @@
  */
 #include "lwrb/lwrb.h"
 
-#include "arm_math.h"
+#include "User/my_memcpy.h"
 
 /* Memory set and copy functions */
 #define BUF_MEMSET      memset
-#define BUF_MEMCPY(dest, src, size)      arm_copy_q7((q7_t*)src, (q7_t*)dest, size)
+#define BUF_MEMCPY(dest, src, size)      my_memcpy((dest), (src), (size))
 
 #define BUF_IS_VALID(b) ((b) != NULL && (b)->buff != NULL && (b)->size > 0)
 #define BUF_MIN(x, y)   ((x) < (y) ? (x) : (y))
