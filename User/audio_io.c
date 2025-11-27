@@ -257,7 +257,7 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
     {
-        ret_int = interface_in_write(uac_get_read_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        ret_int = interface_in_write(uac_get_speaker_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == 1)
         {
             printf("Interface in data overwrite.\n");
@@ -265,7 +265,7 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
-        ret_int = interface_out_read(uac_get_write_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        ret_int = interface_out_read(uac_get_mic_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
         {
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
