@@ -216,6 +216,9 @@ void audio_io_handler()
 
     int ret_int = 0;
 
+    __attribute__((
+        section(".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS];
+
     // 路由底层接口数据
     if (event_group_check_event(EventGroup1, EventGroup1IisDmaBufferReady, true))
     {
@@ -234,8 +237,6 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
     {
-        __attribute__((section(
-            ".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS];
 
         audio_dac_read_ch(&tmp[0], DacCh1);
         feedback_write(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST, audio_dac_get_send_complete_timestamp());
@@ -265,9 +266,15 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
     {
-        ret_int = interface_out_read(uac_get_mic_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        int16_t *uac_mic_buffer = uac_get_mic_buffer_address();
+        ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         if (ret_int == MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST)
         {
+            for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS; i++)
+            {
+                uac_mic_buffer[i * 2] = tmp[i];
+                uac_mic_buffer[i * 2 + 1] = tmp[i];
+            }
             event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
         }
     }

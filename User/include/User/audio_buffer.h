@@ -26,6 +26,9 @@ int interface_in_write(const void *const in, const size_t ms);
 int interface_out_read(void *const out, const size_t ms);
 int interface_out_write(const void *const in, const size_t ms);
 
+int interface_out_auxiliary_read(void *const out, const size_t ms);
+int interface_out_auxiliary_write(const void *const in, const size_t ms);
+
 void reset_audio_rb();
 
 #endif // !__AUDIO_BUFFER_H__

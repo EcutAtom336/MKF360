@@ -45,7 +45,7 @@
 #define AUDIO_MIC_FREQ MKF360_AUDIO_SAMPLE_RATE_HZ
 #define AUDIO_MIC_FRAME_SIZE_BYTE 2u
 #define AUDIO_MIC_RESOLUTION_BIT 16u
-#define AUDIO_MIC_CHANNELS 1u
+#define AUDIO_MIC_CHANNELS 2u
 
 #define AUDIO_OUT_PACKET                                                                                               \
     ((uint32_t)((AUDIO_SPEAKER_FREQ * AUDIO_SPEAKER_FRAME_SIZE_BYTE * AUDIO_SPEAKER_CHANNELS) / 1000))
@@ -117,6 +117,7 @@ static const uint8_t CONFIG_DESCRIPTOR[] = {
                                           0x01,           // bSourceID
                                           0x01,           // bControlSize
                                           0x03,           //
+                                          0x00,           //
                                           0x00            //
                                           ),
     AUDIO_AC_OUTPUT_TERMINAL_DESCRIPTOR_INIT(0x03,                     // bTerminalID
@@ -213,8 +214,9 @@ const struct usb_descriptor usb_desc = {
 // MKF360_AUDIO_PERIPH_DMA_DEST_SAMPLE_NUM 必须是 AUDIO_IN_PACKET 和 AUDIO_OUT_PACKET 的倍数
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
     uac_speaker_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE];
-USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t
-    uac_mic_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX static uint8_t uac_mic_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS *
+                                                                        MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST *
+                                                                        MKF360_AUDIO_SAMPLE_SIZE * AUDIO_MIC_CHANNELS];
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_speaker_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint8_t uac_mic_idle_buffer_idx;
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t uac_speaker_buffer_full;
@@ -319,16 +321,16 @@ void usbd_audio_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 
     uac_mic_buffer_sent += AUDIO_IN_PACKET;
 
-    if (uac_mic_buffer_sent ==
-        MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
+    if (uac_mic_buffer_sent == MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST *
+                                   MKF360_AUDIO_SAMPLE_SIZE * AUDIO_MIC_CHANNELS)
     {
         uac_mic_buffer_sent = 0;
         uac_mic_idle_buffer_idx = uac_mic_idle_buffer_idx == 0 ? 1 : 0;
 
         event_group_set_event(EventGroup1, EventGroup1UacDataOut);
     }
-    else if (uac_mic_buffer_sent >
-             MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE)
+    else if (uac_mic_buffer_sent > MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST *
+                                       MKF360_AUDIO_SAMPLE_SIZE * AUDIO_MIC_CHANNELS)
     {
         __disable_irq();
         while (1)
