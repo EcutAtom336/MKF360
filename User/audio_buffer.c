@@ -12,6 +12,7 @@
 
 __attribute__((section(".bss.DTCM"))) static lwrb_t input_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t output_rb;
+__attribute__((section(".bss.DTCM"))) static lwrb_t output_auxiliary_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t capture1_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t capture2_rb;
 __attribute__((section(".bss.DTCM"))) static lwrb_t playback_rb;
@@ -22,6 +23,8 @@ __attribute__((section(".bss.DTCM"))) static uint8_t
 __attribute__((section(".bss.DTCM"))) static uint8_t
     output_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U +
                   1U];
+__attribute__((section(".bss.DTCM"))) static uint8_t output_auxiliary_rb_buf
+    [MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 2U + 1U];
 __attribute__((section(".bss.DTCM"))) static uint8_t
     capture1_rb_buf[MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_SIZE * 4U +
                     1U];
@@ -82,6 +85,12 @@ void audio_buffer_init()
     }
 
     ret_uint8 = lwrb_init(&output_rb, &output_rb_buf[0], sizeof(output_rb_buf));
+    if (ret_uint8 != 1U)
+    {
+        printf("");
+    }
+
+    ret_uint8 = lwrb_init(&output_auxiliary_rb, &output_auxiliary_rb_buf[0], sizeof(output_auxiliary_rb_buf));
     if (ret_uint8 != 1U)
     {
         printf("");
@@ -175,6 +184,16 @@ int interface_out_read(void *const out, const size_t ms)
 int interface_out_write(const void *const in, const size_t ms)
 {
     return generic_write(&output_rb, in, ms);
+}
+
+int interface_out_auxiliary_read(void *const out, const size_t ms)
+{
+    return generic_read(&output_auxiliary_rb, out, ms);
+}
+
+int interface_out_auxiliary_write(const void *const in, const size_t ms)
+{
+    return generic_write(&output_auxiliary_rb, in, ms);
 }
 
 void reset_audio_rb()
