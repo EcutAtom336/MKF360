@@ -168,7 +168,14 @@ void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac)
         //              MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 0;
         send_complete_timestamp = HAL_GetTick();
-        event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
+        if (IS_CH1_ENABLED())
+        {
+            event_group_set_event(EventGroup1, EventGroup1DacCh1DmaBufferReady);
+        }
+        if (IS_CH2_ENABLED())
+        {
+            event_group_set_event(EventGroup1, EventGroup1DacCh2DmaBufferReady);
+        }
     }
 }
 
@@ -180,6 +187,13 @@ void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
         //              MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 1;
         send_complete_timestamp = HAL_GetTick();
-        event_group_set_event(EventGroup1, EventGroup1DacDmaBufferReady);
+        if (IS_CH1_ENABLED())
+        {
+            event_group_set_event(EventGroup1, EventGroup1DacCh1DmaBufferReady);
+        }
+        if (IS_CH2_ENABLED())
+        {
+            event_group_set_event(EventGroup1, EventGroup1DacCh2DmaBufferReady);
+        }
     }
 }
