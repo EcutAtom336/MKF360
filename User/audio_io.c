@@ -235,9 +235,8 @@ void audio_io_handler()
             interface_in_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1DacDmaBufferReady, true))
+    if (event_group_check_event(EventGroup1, EventGroup1DacCh1DmaBufferReady, true))
     {
-
         audio_dac_read_ch(&tmp[0], DacCh1);
         feedback_write(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST, audio_dac_get_send_complete_timestamp());
 
@@ -246,7 +245,9 @@ void audio_io_handler()
         {
             audio_dac_write_ch(&tmp[0], DacCh1);
         }
-
+    }
+    if (event_group_check_event(EventGroup1, EventGroup1DacCh2DmaBufferReady, true))
+    {
         if (audio_io_type == AudioIoTypeAux)
         {
             ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);

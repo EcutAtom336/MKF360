@@ -16,7 +16,8 @@ typedef enum
     EventGroup1DfsdmFilter0DmaBufferReady,
     EventGroup1DfsdmFilter1DmaBufferReady,
 
-    EventGroup1DacDmaBufferReady,
+    EventGroup1DacCh1DmaBufferReady,
+    EventGroup1DacCh2DmaBufferReady,
     EventGroup1IisDmaBufferReady,
     EventGroup1Adc3DmaBufferReady,
     EventGroup1UacDataIn,
