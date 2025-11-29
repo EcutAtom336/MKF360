@@ -21,40 +21,42 @@ __attribute__((section(".bss.DTCM"))) static volatile uint32_t filter1_latest_ti
 void audio_dfsdm_start()
 {
     HAL_StatusTypeDef ret_hal = HAL_OK;
-    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
-        &hdfsdm1_filter0,
-        &hdfsdm1_filter1,
-    };
 
-    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
+    ret_hal =
+        HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter1, filter_dma_buffer[1][0],
+                                            MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
+    if (ret_hal != HAL_OK)
     {
-        ret_hal =
-            HAL_DFSDM_FilterRegularMsbStart_DMA(dfsdm_filters[i], filter_dma_buffer[i][0],
-                                                MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
-        if (ret_hal != HAL_OK)
-        {
-            printf("hdfsdm1 filter%u start fail, code: %u", i, ret_hal);
-            Error_Handler();
-        }
+        printf("hdfsdm1 filter1 start fail, code: %u", ret_hal);
+        Error_Handler();
+    }
+
+    ret_hal =
+        HAL_DFSDM_FilterRegularMsbStart_DMA(&hdfsdm1_filter0, filter_dma_buffer[0][0],
+                                            MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter0 start fail, code: %u", ret_hal);
+        Error_Handler();
     }
 }
 
 void audio_dfsdm_stop()
 {
     HAL_StatusTypeDef ret_hal = HAL_OK;
-    DFSDM_Filter_HandleTypeDef *const dfsdm_filters[] = {
-        &hdfsdm1_filter0,
-        &hdfsdm1_filter1,
-    };
 
-    for (size_t i = 0; i < sizeof(dfsdm_filters) / sizeof(dfsdm_filters[0]); i++)
+    ret_hal = HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter1);
+    if (ret_hal != HAL_OK)
     {
-        ret_hal = HAL_DFSDM_FilterRegularStop_DMA(dfsdm_filters[i]);
-        if (ret_hal != HAL_OK)
-        {
-            printf("hdfsdm1 filter%u stop fail, code: %u", i, ret_hal);
-            Error_Handler();
-        }
+        printf("hdfsdm1 filter1 stop fail, code: %u", ret_hal);
+        Error_Handler();
+    }
+
+    ret_hal = HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
+    if (ret_hal != HAL_OK)
+    {
+        printf("hdfsdm1 filter0 stop fail, code: %u", ret_hal);
+        Error_Handler();
     }
 }
 
