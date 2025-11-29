@@ -262,7 +262,6 @@ void usbd_audio_open(uint8_t busid, uint8_t intf)
         usbd_ep_start_read(busid, AUDIO_OUT_EP,
                            &uac_speaker_buffer[uac_speaker_idle_buffer_idx == 0 ? 1 : 0][uac_speaker_buffer_full],
                            AUDIO_OUT_PACKET);
-        event_group_set_event(EventGroup1, EventGroup1UacDataIn);
     }
     else if (intf == UAC_MIC_INTERFACE)
     {
