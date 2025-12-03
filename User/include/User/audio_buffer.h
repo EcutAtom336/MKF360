@@ -6,26 +6,26 @@
 
 void audio_buffer_init();
 
-int mic1_read(void *const out, const size_t ms, uint32_t *const earliest_timestamp);
-int mic1_write(const void *const in, const size_t ms, const uint32_t latest_timestamp);
+int mic1_read(void *const out, const size_t sample_num);
+int mic1_write(const void *const in, const size_t sample_num);
+uint32_t mic1_get_sample_num();
 
-int mic2_read(void *const out, const size_t ms, uint32_t *const earliest_timestamp);
-int mic2_write(const void *const in, const size_t ms, const uint32_t latest_timestamp);
+int mic2_read(void *const out, const size_t sample_num);
+int mic2_write(const void *const in, const size_t sample_num);
+uint32_t mic2_get_sample_num();
 
-int feedback_read(void *const out, const size_t timestamp, const size_t ms);
-int feedback_write(const void *const in, const size_t ms, const uint32_t latest_timestamp);
+int feedback_read(void *const out, const size_t sample_num);
+int feedback_write(const void *const in, const size_t sample_num);
+uint32_t feedback_get_sample_num();
 
-int speaker_read(void *const out, const size_t ms);
-int speaker_write(const void *const in, const size_t ms);
+int speaker_read(void *const out, const size_t sample_num);
+int speaker_write(const void *const in, const size_t sample_num);
 
-int interface_in_read(void *const out, const size_t ms);
-int interface_in_write(const void *const in, const size_t ms);
+int interface_in_read(void *const out, const size_t sample_num);
+int interface_in_write(const void *const in, const size_t sample_num);
 
-int interface_out_read(void *const out, const size_t ms);
-int interface_out_write(const void *const in, const size_t ms);
-
-int interface_out_auxiliary_read(void *const out, const size_t ms);
-int interface_out_auxiliary_write(const void *const in, const size_t ms);
+int interface_out_read(void *const out, const size_t sample_num);
+int interface_out_write(const void *const in, const size_t sample_num);
 
 void reset_audio_rb();
 

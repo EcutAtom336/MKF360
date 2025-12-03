@@ -111,13 +111,15 @@ build-gen:
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_io.c
           category: sourceC
-        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_det_isr.c
-          category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_buffer.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_processor.c
           category: sourceC
         - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/audio_dfsdm.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/isr_router.c
+          category: sourceC
+        - file: D:/Users/zhujiatao/my_project/MKF360/embed/MKF360/User/my_memcpy.c
           category: sourceC
     - group: CherryUSB
       files:

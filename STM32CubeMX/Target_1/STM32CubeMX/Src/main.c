@@ -34,9 +34,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "usbd_core.h"
-
+#include "User/audio_buffer.h"
 #include "User/audio_io.h"
 #include "User/audio_processor.h"
 #include "User/event_group.h"
@@ -140,9 +140,9 @@ int main(void)
     MX_USART1_UART_Init();
     MX_DAC1_Init();
     MX_I2S3_Init();
-    MX_TIM7_Init();
     MX_ADC3_Init();
     MX_TIM6_Init();
+    MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
 
     audio_io_init();
@@ -173,6 +173,8 @@ int main(void)
         }
         if (event_group_check_event(EventGroup1, EventGroup1AudioIoDisconnected, true))
         {
+            audio_processor_reset();
+            reset_audio_rb();
             printf("Audio IO disconnected.\n");
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
@@ -259,7 +261,7 @@ void PeriphCommonClock_Config(void)
     PeriphClkInitStruct.PeriphClockSelection =
         RCC_PERIPHCLK_USB | RCC_PERIPHCLK_ADC | RCC_PERIPHCLK_SAI1 | RCC_PERIPHCLK_SPI3 | RCC_PERIPHCLK_USART1;
     PeriphClkInitStruct.PLL2.PLL2M = 1;
-    PeriphClkInitStruct.PLL2.PLL2N = 24;
+    PeriphClkInitStruct.PLL2.PLL2N = 48;
     PeriphClkInitStruct.PLL2.PLL2P = 5;
     PeriphClkInitStruct.PLL2.PLL2Q = 2;
     PeriphClkInitStruct.PLL2.PLL2R = 5;

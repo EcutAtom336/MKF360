@@ -1,4 +1,6 @@
+#include "User/audio_adc.h"
 #include "User/event_group.h"
+#include "adc.h"
 #include "main.h"
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -24,5 +26,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             // BT disconnect
             event_group_set_event(EventGroup1, EventGroup1BtDisconnect);
         }
+    }
+}
+
+void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
+{
+    if (hadc == &hadc3)
+    {
+        audio_adc_dma_half_cplt_isr_callback();
+    }
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+    if (hadc == &hadc3)
+    {
+        audio_adc_dma_cplt_isr_callback();
     }
 }

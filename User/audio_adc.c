@@ -59,16 +59,14 @@ void audio_adc_read(int16_t *buffer)
                  MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
 }
 
-void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
+void audio_adc_dma_half_cplt_isr_callback()
 {
-    (void)hadc;
     idle_buffer = 0U;
     event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+void audio_adc_dma_cplt_isr_callback()
 {
-    (void)hadc;
     idle_buffer = 1U;
     event_group_set_event(EventGroup1, EventGroup1Adc3DmaBufferReady);
 }

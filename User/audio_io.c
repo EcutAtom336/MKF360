@@ -8,6 +8,7 @@
 #include "User/audio_dfsdm.h"
 #include "User/audio_iis.h"
 #include "User/event_group.h"
+#include "User/share_buffer.h"
 #include "User/usb_desc.h"
 #include "main.h"
 #include "usbd_core.h"
@@ -210,79 +211,80 @@ void audio_io_handler()
         audio_dfsdm_stop();
         speaker_stop();
         enable_all_audio_io();
-        reset_audio_rb();
         event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
     }
 
     int ret_int = 0;
 
-    __attribute__((
-        section(".bss.DTCM"))) static int16_t tmp[MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS];
+    int16_t *buffer = &shared_buffer[0];
 
     // 路由底层接口数据
     if (event_group_check_event(EventGroup1, EventGroup1IisDmaBufferReady, true))
     {
         if (audio_io_type == AudioIoTypeBt)
         {
-            interface_out_read(iis_get_tx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-            interface_in_write(iis_get_rx_idle_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+            interface_out_read(iis_get_tx_idle_buffer_address(),
+                               MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+            interface_in_write(iis_get_rx_idle_buffer_address(),
+                               MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
     {
         if (audio_io_type == AudioIoTypeAux)
         {
-            interface_in_write(audio_adc_get_data_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+            interface_in_write(audio_adc_get_data_address(),
+                               MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1DacCh1DmaBufferReady, true))
     {
-        audio_dac_read_ch(&tmp[0], DacCh1);
-        feedback_write(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST, audio_dac_get_send_complete_timestamp());
-
-        ret_int = speaker_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-        if (ret_int == 0)
+        ret_int = speaker_read(buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+        if (ret_int != 0)
         {
-            audio_dac_write_ch(&tmp[0], DacCh1);
+            memset(buffer, 0,
+                   MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_SAMPLE_SIZE);
         }
+        else
+        {
+            audio_dac_write_ch(buffer, DacCh1);
+        }
+        feedback_write(buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
     }
-    if (event_group_check_event(EventGroup1, EventGroup1DacCh2DmaBufferReady, true))
+    if (event_group_check_event(EventGroup1, EventGroup1DacCh2DmaBufferReady, false))
     {
         if (audio_io_type == AudioIoTypeAux)
         {
-            ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+            ret_int = interface_out_read(&buffer[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
             if (ret_int == 0)
             {
-                audio_dac_write_ch(&tmp[0], DacCh2);
+                audio_dac_write_ch(&buffer[0], DacCh2);
+                event_group_check_event(EventGroup1, EventGroup1DacCh2DmaBufferReady, true);
             }
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1UacDataIn, true))
     {
-        ret_int = interface_in_write(uac_get_speaker_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        ret_int = interface_in_write(uac_get_speaker_buffer_address(),
+                                     MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         if (ret_int == 1)
         {
             printf("Interface in data overwrite.\n");
         }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, false))
+    if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, true))
     {
         int16_t *uac_mic_buffer = uac_get_mic_buffer_address();
-        ret_int = interface_out_read(&tmp[0], MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-        if (ret_int == 0)
+        ret_int = interface_out_read(uac_mic_buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+        if (ret_int != 0)
         {
-            for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS; i++)
-            {
-                uac_mic_buffer[i * 2] = tmp[i];
-                uac_mic_buffer[i * 2 + 1] = tmp[i];
-            }
-            event_group_check_event(EventGroup1, EventGroup1UacDataOut, true);
+            memset(uac_mic_buffer, 0, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2 * MKF360_AUDIO_SAMPLE_NUM_1MS);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady, true))
     {
-        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST,
-                             audio_dfsdm_get_filter0_latest_timestamp());
+        ret_int = mic1_write(audio_dfsdm_get_filter0_buffer_address(),
+                             MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         if (ret_int == 1)
         {
             printf("Mic1 data overwrite.\n");
@@ -290,11 +292,20 @@ void audio_io_handler()
     }
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady, true))
     {
-        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(), MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST,
-                             audio_dfsdm_get_filter1_latest_timestamp());
+        ret_int = mic2_write(audio_dfsdm_get_filter1_buffer_address(),
+                             MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         if (ret_int == 1)
         {
             printf("Mic2 data overwrite.\n");
         }
+    }
+
+    if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter0DmaError, true))
+    {
+        printf("DFSDM filter0 DMA error.\n");
+    }
+    if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaError, true))
+    {
+        printf("DFSDM filter1 DMA error.\n");
     }
 }

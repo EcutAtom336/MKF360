@@ -47,7 +47,7 @@ void MX_DFSDM1_Init(void)
     hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
     hdfsdm1_filter0.Init.RegularParam.DmaMode = ENABLE;
     hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_SINC4_ORDER;
-    hdfsdm1_filter0.Init.FilterParam.Oversampling = 32;
+    hdfsdm1_filter0.Init.FilterParam.Oversampling = 64;
     hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
     if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK)
     {
@@ -58,7 +58,7 @@ void MX_DFSDM1_Init(void)
     hdfsdm1_filter1.Init.RegularParam.FastMode = ENABLE;
     hdfsdm1_filter1.Init.RegularParam.DmaMode = ENABLE;
     hdfsdm1_filter1.Init.FilterParam.SincOrder = DFSDM_FILTER_SINC4_ORDER;
-    hdfsdm1_filter1.Init.FilterParam.Oversampling = 32;
+    hdfsdm1_filter1.Init.FilterParam.Oversampling = 64;
     hdfsdm1_filter1.Init.FilterParam.IntOversampling = 1;
     if (HAL_DFSDM_FilterInit(&hdfsdm1_filter1) != HAL_OK)
     {
@@ -76,7 +76,7 @@ void MX_DFSDM1_Init(void)
     hdfsdm1_channel0.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
     hdfsdm1_channel0.Init.Awd.Oversampling = 1;
     hdfsdm1_channel0.Init.Offset = 0;
-    hdfsdm1_channel0.Init.RightBitShift = 0;
+    hdfsdm1_channel0.Init.RightBitShift = 2;
     if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel0) != HAL_OK)
     {
         Error_Handler();
@@ -93,7 +93,7 @@ void MX_DFSDM1_Init(void)
     hdfsdm1_channel1.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
     hdfsdm1_channel1.Init.Awd.Oversampling = 1;
     hdfsdm1_channel1.Init.Offset = 0;
-    hdfsdm1_channel1.Init.RightBitShift = 0;
+    hdfsdm1_channel1.Init.RightBitShift = 2;
     if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel1) != HAL_OK)
     {
         Error_Handler();

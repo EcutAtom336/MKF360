@@ -29,7 +29,6 @@ __attribute__((section(".bss.DMA_RAM_D2"))) __attribute__((aligned(
 
 __attribute__((section(".bss.DTCM"))) static uint32_t flags;
 __attribute__((section(".bss.DTCM"))) volatile static uint32_t idle_buffer;
-__attribute__((section(".bss.DTCM"))) volatile static uint32_t send_complete_timestamp;
 
 static void dac_start()
 {
@@ -125,49 +124,13 @@ void audio_dac_write_ch(const int16_t *data, const DacCh_t ch)
     }
 }
 
-void audio_dac_read_ch(int16_t *const data, const DacCh_t ch)
-{
-    if (ch == DacCh1)
-    {
-        if (!IS_CH1_ENABLED())
-        {
-            printf("dac ch1 not enable.\n");
-            return;
-        }
-        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST; ++i)
-        {
-            int32_t origin = ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch1;
-            data[i] = origin - 32768U;
-        }
-    }
-    else if (ch == DacCh2)
-    {
-        if (!IS_CH2_ENABLED())
-        {
-            printf("dac ch2 not enable.\n");
-            return;
-        }
-        for (size_t i = 0; i < MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST; ++i)
-        {
-            int32_t origin = ((DacFrame_t *)&dac_dma_buffer[idle_buffer][i])->ch2;
-            data[i] = origin - 32768U;
-        }
-    }
-}
-
-uint32_t audio_dac_get_send_complete_timestamp()
-{
-    return send_complete_timestamp;
-}
-
 void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     if (hdac == &hdac1)
     {
-        // arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0],
-        //              MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[0][0],
+                     MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 0;
-        send_complete_timestamp = HAL_GetTick();
         if (IS_CH1_ENABLED())
         {
             event_group_set_event(EventGroup1, EventGroup1DacCh1DmaBufferReady);
@@ -183,10 +146,9 @@ void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac)
 {
     if (hdac == &hdac1)
     {
-        // arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0],
-        //              MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
+        arm_fill_q31((32768U << 16U) + 32768U, (q31_t *)&dac_dma_buffer[1][0],
+                     MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
         idle_buffer = 1;
-        send_complete_timestamp = HAL_GetTick();
         if (IS_CH1_ENABLED())
         {
             event_group_set_event(EventGroup1, EventGroup1DacCh1DmaBufferReady);

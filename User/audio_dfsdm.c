@@ -15,8 +15,6 @@ __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
     filter_dma_buffer[2][2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 __attribute__((section(".bss.DTCM"))) static volatile uint8_t filter0_idle_buffer;
 __attribute__((section(".bss.DTCM"))) static volatile uint8_t filter1_idle_buffer;
-__attribute__((section(".bss.DTCM"))) static volatile uint32_t filter0_latest_timestamp;
-__attribute__((section(".bss.DTCM"))) static volatile uint32_t filter1_latest_timestamp;
 
 void audio_dfsdm_start()
 {
@@ -70,28 +68,16 @@ int16_t *audio_dfsdm_get_filter1_buffer_address()
     return &filter_dma_buffer[1][filter1_idle_buffer][0];
 }
 
-uint32_t audio_dfsdm_get_filter0_latest_timestamp()
-{
-    return filter0_latest_timestamp;
-}
-
-uint32_t audio_dfsdm_get_filter1_latest_timestamp()
-{
-    return filter1_latest_timestamp;
-}
-
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
 {
     if (hdfsdm_filter == &hdfsdm1_filter0)
     {
         filter0_idle_buffer = 0;
-        filter0_latest_timestamp = HAL_GetTick();
         event_group_set_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady);
     }
     else if (hdfsdm_filter == &hdfsdm1_filter1)
     {
         filter1_idle_buffer = 0;
-        filter1_latest_timestamp = HAL_GetTick();
         event_group_set_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady);
     }
 }
@@ -101,13 +87,23 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filt
     if (hdfsdm_filter == &hdfsdm1_filter0)
     {
         filter0_idle_buffer = 1;
-        filter0_latest_timestamp = HAL_GetTick();
         event_group_set_event(EventGroup1, EventGroup1DfsdmFilter0DmaBufferReady);
     }
     else if (hdfsdm_filter == &hdfsdm1_filter1)
     {
         filter1_idle_buffer = 1;
-        filter1_latest_timestamp = HAL_GetTick();
         event_group_set_event(EventGroup1, EventGroup1DfsdmFilter1DmaBufferReady);
+    }
+}
+
+void HAL_DFSDM_FilterErrorCallback(DFSDM_Filter_HandleTypeDef *hdfsdm_filter)
+{
+    if (hdfsdm_filter == &hdfsdm1_filter0)
+    {
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter0DmaError);
+    }
+    else if (hdfsdm_filter == &hdfsdm1_filter1)
+    {
+        event_group_set_event(EventGroup1, EventGroup1DfsdmFilter1DmaError);
     }
 }
