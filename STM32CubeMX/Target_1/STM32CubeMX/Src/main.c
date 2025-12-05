@@ -145,8 +145,8 @@ int main(void)
     MX_TIM7_Init();
     /* USER CODE BEGIN 2 */
 
+    stdout_init();
     audio_io_init();
-
     audio_processor_init();
 
     /* USER CODE END 2 */
@@ -179,7 +179,7 @@ int main(void)
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
         {
-            flush_stdout();
+            stdout_maintain();
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {

@@ -1,43 +1,52 @@
 #include "User/retarget.h"
 
-#include "usart.h"
+#include <stdbool.h>
 
+#include "lwrb/lwrb.h"
 #include "stm32h7xx_hal.h"
 
-#define BUFFER_SIZE (1024U)
+#include "usart.h"
+
+#define BUFFER_SIZE (4096U)
 #define TRY_OUTPUT_THRESHOLD ((uint32_t)(BUFFER_SIZE * 0.8F))
 #define MINIMAL_OUT_TICK_INTERVAL (50U)
 
-__attribute__((section(".bss.DMA_RAM_D2"))) uint8_t stdout_buffer[2][BUFFER_SIZE];
-__attribute__((section(".bss.DTCM"))) uint32_t idle_buffer_full_size;
-__attribute__((section(".bss.DTCM"))) uint8_t current_write_buffer_idx;
+__attribute__((section(".bss.DTCM"))) lwrb_t stdout_rb;
+__attribute__((section(".bss.DMA_RAM_D2"))) uint8_t stdout_rb_buffer[BUFFER_SIZE];
 __attribute__((section(".bss.DTCM"))) uint32_t last_out_tick;
+__attribute__((section(".bss.DTCM"))) volatile bool tx_busy;
+__attribute__((section(".bss.DTCM"))) uint32_t pendding_send_size;
 
-static inline void switch_buffer()
+inline void stdout_maintain()
 {
-    current_write_buffer_idx = current_write_buffer_idx == 0 ? 1 : 0;
-    idle_buffer_full_size = 0U;
-}
+    // 如果有正在进行的传输，先检测传输状态
+    if (tx_busy)
+    {
+        return;
+    }
+    if (pendding_send_size != 0)
+    {
+        // 传输完成，释放内存
+        lwrb_skip(&stdout_rb, pendding_send_size);
+        pendding_send_size = 0;
+    }
 
-static inline void try_output()
-{
-    if (idle_buffer_full_size == 0U ||
-        (idle_buffer_full_size < TRY_OUTPUT_THRESHOLD && HAL_GetTick() - last_out_tick < MINIMAL_OUT_TICK_INTERVAL))
+    const uint32_t current_tick = HAL_GetTick();
+    const uint32_t full = lwrb_get_full(&stdout_rb);
+    if (full == 0 || (current_tick - last_out_tick < MINIMAL_OUT_TICK_INTERVAL && full < TRY_OUTPUT_THRESHOLD))
     {
         return;
     }
 
-    if (HAL_UART_GetState(&huart1) != HAL_UART_STATE_READY || HAL_DMA_GetState(huart1.hdmatx) != HAL_DMA_STATE_READY)
-    {
-        return;
-    }
+    const uint32_t linear_length = lwrb_get_linear_block_read_length(&stdout_rb);
+    const void *linear_address = lwrb_get_linear_block_read_address(&stdout_rb);
 
-    HAL_StatusTypeDef ret_hal =
-        HAL_UART_Transmit_DMA(&huart1, &stdout_buffer[current_write_buffer_idx][0], idle_buffer_full_size);
+    HAL_StatusTypeDef ret_hal = HAL_UART_Transmit_DMA(&huart1, linear_address, linear_length);
     if (ret_hal == HAL_OK)
     {
         last_out_tick = HAL_GetTick();
-        switch_buffer();
+        pendding_send_size = linear_length;
+        tx_busy = true;
     }
     else
     {
@@ -45,21 +54,30 @@ static inline void try_output()
     }
 }
 
+void stdout_init()
+{
+    lwrb_init(&stdout_rb, &stdout_rb_buffer[0], sizeof(stdout_rb_buffer));
+}
+
 int stdout_putchar(int ch)
 {
     const uint8_t uint8_ch = (uint8_t)ch;
 
-    if (idle_buffer_full_size < BUFFER_SIZE)
+    if (lwrb_get_free(&stdout_rb) != 0)
     {
-        stdout_buffer[current_write_buffer_idx][idle_buffer_full_size++] = uint8_ch;
+        lwrb_write(&stdout_rb, &uint8_ch, 1);
     }
 
-    try_output();
+    stdout_maintain();
 
     return ch;
 }
 
-void flush_stdout()
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-    try_output();
+    if (huart == &huart1)
+    {
+        tx_busy = false;
+        huart->gState = HAL_UART_STATE_READY;
+    }
 }

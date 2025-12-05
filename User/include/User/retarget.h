@@ -1,6 +1,8 @@
 #ifndef __RETARGET_H__
 #define __RETARGET_H__
 
-void flush_stdout();
+void stdout_init();
+
+void stdout_maintain();
 
 #endif // !__RETARGET_H__
