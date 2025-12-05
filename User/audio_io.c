@@ -26,6 +26,13 @@ typedef enum
     AudioIoTypeUac,
 } AudioIoType_t;
 
+const char *AUDIO_IO_TYPE_NAME[] = {
+    "None",
+    "Aux",
+    "BT",
+    "UAC",
+};
+
 typedef enum
 {
     FlagsIdxAuxEnabled,
@@ -156,26 +163,50 @@ void audio_io_handler()
 {
     // 处理连接事件
     bool has_connect_event = false;
-    if (event_group_check_event(EventGroup1, EventGroup1AuxConnect, true) && audio_io_type == AudioIoTypeNone)
+    if (event_group_check_event(EventGroup1, EventGroup1AuxConnect, true))
     {
-        disable_audio_io_exclue(AudioIoTypeAux);
-        audio_adc_start();
-        audio_dac_ctl(AudioDacCmdEnableCh2);
-        audio_io_type = AudioIoTypeAux;
-        has_connect_event = true;
+        printf("AUX connect event coming.\n");
+        if (audio_io_type != AudioIoTypeNone)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            disable_audio_io_exclue(AudioIoTypeAux);
+            audio_adc_start();
+            audio_dac_ctl(AudioDacCmdEnableCh2);
+            audio_io_type = AudioIoTypeAux;
+            has_connect_event = true;
+        }
     }
-    if (event_group_check_event(EventGroup1, EventGroup1BtConnect, true) && audio_io_type == AudioIoTypeNone)
+    if (event_group_check_event(EventGroup1, EventGroup1BtConnect, true))
     {
-        disable_audio_io_exclue(AudioIoTypeBt);
-        iis_start();
-        audio_io_type = AudioIoTypeBt;
-        has_connect_event = true;
+        printf("BT connect event coming.\n");
+        if (audio_io_type != AudioIoTypeNone)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            disable_audio_io_exclue(AudioIoTypeBt);
+            iis_start();
+            audio_io_type = AudioIoTypeBt;
+            has_connect_event = true;
+        }
     }
     if (event_group_check_event(EventGroup1, EventGroup1UsbConnect, true) && audio_io_type == AudioIoTypeNone)
     {
-        disable_audio_io_exclue(AudioIoTypeUac);
-        audio_io_type = AudioIoTypeUac;
-        has_connect_event = true;
+        printf("USB connect event coming.\n");
+        if (audio_io_type != AudioIoTypeNone)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            disable_audio_io_exclue(AudioIoTypeUac);
+            audio_io_type = AudioIoTypeUac;
+            has_connect_event = true;
+        }
     }
     if (has_connect_event == true)
     {
@@ -186,24 +217,48 @@ void audio_io_handler()
 
     // 处理断开事件
     bool has_disconnect_event = false;
-    if (event_group_check_event(EventGroup1, EventGroup1UsbDisconnect, true) && audio_io_type == AudioIoTypeUac)
+    if (event_group_check_event(EventGroup1, EventGroup1UsbDisconnect, true))
     {
-        // CherryUSB 不支持断开事件，
-        // 重新初始化协议栈避免协议栈内部重复触发挂起事件
-        usbd_deinitialize(0);
-        usb_init(0, USB_OTG_FS_PERIPH_BASE);
-        has_disconnect_event = true;
+        printf("UAC disconnect event coming.\n");
+        if (audio_io_type != AudioIoTypeUac)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            // CherryUSB 不支持断开事件，
+            // 重新初始化协议栈避免协议栈内部重复触发挂起事件
+            usbd_deinitialize(0);
+            usb_init(0, USB_OTG_FS_PERIPH_BASE);
+            has_disconnect_event = true;
+        }
     }
     if (event_group_check_event(EventGroup1, EventGroup1BtDisconnect, true) && audio_io_type == AudioIoTypeBt)
     {
-        iis_stop();
-        has_disconnect_event = true;
+        printf("BT disconnect event coming.\n");
+        if (audio_io_type != AudioIoTypeBt)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            iis_stop();
+            has_disconnect_event = true;
+        }
     }
     if (event_group_check_event(EventGroup1, EventGroup1AuxDisconnect, true) && audio_io_type == AudioIoTypeAux)
     {
-        audio_adc_stop();
-        audio_dac_ctl(AudioDacCmdDisableCh2);
-        has_disconnect_event = true;
+        printf("AUX disconnect event coming.\n");
+        if (audio_io_type != AudioIoTypeAux)
+        {
+            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
+        }
+        else
+        {
+            audio_adc_stop();
+            audio_dac_ctl(AudioDacCmdDisableCh2);
+            has_disconnect_event = true;
+        }
     }
     if (has_disconnect_event == true)
     {

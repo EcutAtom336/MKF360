@@ -27,6 +27,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             event_group_set_event(EventGroup1, EventGroup1BtDisconnect);
         }
     }
+    else if (GPIO_Pin == HEADSET_DET_Pin)
+    {
+        if (HAL_GPIO_ReadPin(HEADSET_DET_GPIO_Port, HEADSET_DET_Pin) == GPIO_PIN_SET)
+        {
+            event_group_set_event(EventGroup1, EventGroup1AuxConnect);
+        }
+        else
+        {
+            event_group_set_event(EventGroup1, EventGroup1AuxDisconnect);
+        }
+    }
 }
 
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)

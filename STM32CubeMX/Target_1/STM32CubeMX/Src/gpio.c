@@ -77,6 +77,12 @@ void MX_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(HEADSET_OUT_EN_GPIO_Port, &GPIO_InitStruct);
 
+    /*Configure GPIO pin : HEADSET_DET_Pin */
+    GPIO_InitStruct.Pin = HEADSET_DET_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(HEADSET_DET_GPIO_Port, &GPIO_InitStruct);
+
     /*Configure GPIO pin : VBUS_DETECT_Pin */
     GPIO_InitStruct.Pin = VBUS_DETECT_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -108,6 +114,9 @@ void MX_GPIO_Init(void)
     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PA0, SYSCFG_SWITCH_PA0_CLOSE);
 
     /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 14, 0);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
