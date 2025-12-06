@@ -142,12 +142,12 @@ int interface_in_write(const void *const in, const size_t sample_num)
 
 int interface_out_read(void *const out, const size_t sample_num)
 {
-    return generic_read(&output_rb, out, sample_num * 2);
+    return generic_read(&output_rb, out, sample_num);
 }
 
 int interface_out_write(const void *const in, const size_t sample_num)
 {
-    return generic_write(&output_rb, in, sample_num * 2);
+    return generic_write(&output_rb, in, sample_num);
 }
 
 void reset_audio_rb()

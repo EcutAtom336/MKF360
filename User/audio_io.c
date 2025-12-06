@@ -7,6 +7,7 @@
 #include "User/audio_dac.h"
 #include "User/audio_dfsdm.h"
 #include "User/audio_iis.h"
+#include "User/audio_processor.h"
 #include "User/event_group.h"
 #include "User/share_buffer.h"
 #include "User/usb_desc.h"
@@ -175,6 +176,7 @@ void audio_io_handler()
             disable_audio_io_exclue(AudioIoTypeAux);
             audio_adc_start();
             audio_dac_ctl(AudioDacCmdEnableCh2);
+            audio_processor_set_ifout_ch_num(1);
             audio_io_type = AudioIoTypeAux;
             has_connect_event = true;
         }
@@ -190,6 +192,7 @@ void audio_io_handler()
         {
             disable_audio_io_exclue(AudioIoTypeBt);
             iis_start();
+            audio_processor_set_ifout_ch_num(1);
             audio_io_type = AudioIoTypeBt;
             has_connect_event = true;
         }
@@ -204,6 +207,7 @@ void audio_io_handler()
         else
         {
             disable_audio_io_exclue(AudioIoTypeUac);
+            audio_processor_set_ifout_ch_num(2);
             audio_io_type = AudioIoTypeUac;
             has_connect_event = true;
         }
@@ -330,7 +334,8 @@ void audio_io_handler()
     if (event_group_check_event(EventGroup1, EventGroup1UacDataOut, true))
     {
         int16_t *uac_mic_buffer = uac_get_mic_buffer_address();
-        ret_int = interface_out_read(uac_mic_buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+        ret_int =
+            interface_out_read(uac_mic_buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS * 2);
         if (ret_int != 0)
         {
             memset(uac_mic_buffer, 0, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * 2 * MKF360_AUDIO_SAMPLE_NUM_1MS);

@@ -21,6 +21,8 @@
 __attribute__((section(".bss.DTCM"))) SpeexPreprocessState *speex_preprocess_state;
 __attribute__((section(".bss.DTCM"))) SpeexEchoState *speex_echo_state;
 
+__attribute__((section(".bss.DTCM"))) uint8_t ifout_ch_num;
+
 __attribute__((section(".bss.DTCM"))) uint32_t last_log_tick;
 __attribute__((section(".bss.DTCM"))) uint32_t delayed_samples;
 
@@ -45,8 +47,15 @@ int32_t audio_processor_init()
 
 void audio_processor_reset()
 {
+    ifout_ch_num = 1;
     delayed_samples = 0;
     speex_echo_state_reset(speex_echo_state);
+}
+
+void audio_processor_set_ifout_ch_num(const uint8_t ch_num)
+{
+    printf("Set interface out ch num to %u\n", ch_num);
+    ifout_ch_num = ch_num;
 }
 
 void audio_process()
@@ -174,22 +183,29 @@ static void process_capture_audio()
     speex_echo_cancellation(speex_echo_state, buffer1, buffer2, buffer3);
     speex_preprocess_run(speex_preprocess_state, buffer3);
 
+    if (ifout_ch_num == 1)
+    {
+        interface_out_write(buffer3, PROCESS_FRAME_SAMPLES);
+    }
+    else if (ifout_ch_num == 2)
+    {
 #if AUDIO_PROCESS_DEBUG == 1
 #pragma unroll PROCESS_FRAME_SAMPLES
-    for (size_t i = 0; i < PROCESS_FRAME_SAMPLES; i++)
-    {
-        buffer4[i * 2 + 0] = buffer3[i];
-        buffer4[i * 2 + 1] = buffer2[i];
-    }
+        for (size_t i = 0; i < PROCESS_FRAME_SAMPLES; i++)
+        {
+            buffer4[i * 2 + 0] = buffer3[i];
+            buffer4[i * 2 + 1] = buffer2[i];
+        }
 #else
 #pragma unroll PROCESS_FRAME_SAMPLES
-    for (size_t i = 0; i < PROCESS_FRAME_SAMPLES; i++)
-    {
-        buffer4[i * 2 + 0] = buffer3[i];
-        buffer4[i * 2 + 1] = buffer3[i];
-    }
+        for (size_t i = 0; i < PROCESS_FRAME_SAMPLES; i++)
+        {
+            buffer4[i * 2 + 0] = buffer3[i];
+            buffer4[i * 2 + 1] = buffer3[i];
+        }
 #endif
-    interface_out_write(&buffer4[0], PROCESS_FRAME_SAMPLES);
+        interface_out_write(buffer4, PROCESS_FRAME_SAMPLES * 2);
+    }
 }
 
 static int16_t get_rms(const int16_t *const in, const size_t num)
