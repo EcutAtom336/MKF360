@@ -10,6 +10,12 @@
 #include "i2s.h"
 #include "main.h"
 
+// 只使用一个声道，但 IIS 有两个声道，
+// 为节约内存，数据不区分声道，连续储存在内存中
+// | Left CH sample 1 | Right CH sample 1 | Left CH sample 2 | Right CH sample 2 | ... |
+// | MONO sample 1    | MONO sample 2     | MONO sample 3    | MONO sample 4     | ... |
+// 实际音频采样率为 MKF360_AUDIO_SAMPLE_RATE_HZ，IIS 配置为音频采样率配置为 MKF360_AUDIO_SAMPLE_RATE_HZ/2
+
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
     iis_tx_dma_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
@@ -46,18 +52,6 @@ int16_t *iis_get_tx_idle_buffer_address()
 int16_t *iis_get_rx_idle_buffer_address()
 {
     return &iis_rx_dma_buffer[idle_buffer][0];
-}
-
-void iis_tx_write(const int16_t *buffer)
-{
-    arm_copy_q15(buffer, &iis_tx_dma_buffer[idle_buffer][0],
-                 MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
-}
-
-void iis_rx_read(int16_t *buffer)
-{
-    arm_copy_q15(&iis_rx_dma_buffer[idle_buffer][0], buffer,
-                 MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST);
 }
 
 void HAL_I2SEx_TxRxHalfCpltCallback(I2S_HandleTypeDef *hi2s)

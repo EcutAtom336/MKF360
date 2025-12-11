@@ -139,10 +139,10 @@ int main(void)
     MX_DFSDM1_Init();
     MX_USART1_UART_Init();
     MX_DAC1_Init();
-    MX_I2S3_Init();
     MX_ADC3_Init();
     MX_TIM6_Init();
     MX_TIM7_Init();
+    MX_I2S3_Init();
     /* USER CODE BEGIN 2 */
 
     stdout_init();
