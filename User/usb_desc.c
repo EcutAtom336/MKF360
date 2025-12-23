@@ -238,7 +238,6 @@ static void usbd_event_handler(uint8_t busid, uint8_t event)
     case USBD_EVENT_SUSPEND:
         break;
     case USBD_EVENT_CONFIGURED:
-        event_group_set_event(EventGroup1, EventGroup1UsbConnect);
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;

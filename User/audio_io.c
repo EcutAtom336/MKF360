@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "arm_math.h"
+
 #include "User/audio_adc.h"
 #include "User/audio_buffer.h"
 #include "User/audio_dac.h"
@@ -19,6 +21,8 @@
  * [Mic] --> capture_rb --> (process) --> output_rb --> [Interface]
  */
 
+#define IO_STAT_CHANGE_TICK_THRESHOLD (50U)
+
 typedef enum
 {
     AudioIoTypeNone,
@@ -27,61 +31,52 @@ typedef enum
     AudioIoTypeUac,
 } AudioIoType_t;
 
-const char *AUDIO_IO_TYPE_NAME[] = {
-    "None",
-    "Aux",
-    "BT",
-    "UAC",
-};
-
 typedef enum
 {
-    FlagsIdxAuxEnabled,
     FlagsIdxBtEnabled,
     FlagsIdxUacEnabled,
+    FlagsIdxAuxDetected,
+    FlagsIdxBtDetected,
+    FlagsIdxUacDetected,
 } FlagsIdx_t;
 
 __attribute__((section(".bss.DTCM"))) static uint32_t flags;
 
+__attribute__((section(".bss.DTCM"))) static bool aux_changed_detected;
+__attribute__((section(".bss.DTCM"))) static bool bt_changed_detected;
+__attribute__((section(".bss.DTCM"))) static uint32_t aux_change_detected_tick;
+__attribute__((section(".bss.DTCM"))) static uint32_t bt_change_detected_tick;
+
 __attribute__((section(".bss.DTCM"))) static AudioIoType_t audio_io_type = AudioIoTypeNone;
 
-static inline void aux_enable();
-static inline void aux_disable();
 static inline void bt_enable();
 static inline void bt_disable();
 static inline void uac_enable();
 static inline void uac_disable();
 static void speaker_start();
 static void speaker_stop();
-
-static inline void aux_enable()
-{
-#warning "Hardware unsupport, only set flag"
-    flags |= (1U << FlagsIdxAuxEnabled);
-}
-
-static inline void aux_disable()
-{
-#warning "Hardware unsupport, only clear flag"
-    flags &= ~(1U << FlagsIdxAuxEnabled);
-}
+static void hardware_link_detect();
+static void aux_detect();
+static void bt_detect();
+static void uac_detect();
+static void software_link_switch();
 
 static inline void bt_enable()
 {
-    HAL_GPIO_WritePin(BT_DISABLE__GPIO_Port, BT_DISABLE__Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BT_ENABLE_GPIO_Port, BT_ENABLE_Pin, GPIO_PIN_SET);
     flags |= (1U << FlagsIdxBtEnabled);
 }
 
 static inline void bt_disable()
 {
-    HAL_GPIO_WritePin(BT_DISABLE__GPIO_Port, BT_DISABLE__Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BT_ENABLE_GPIO_Port, BT_ENABLE_Pin, GPIO_PIN_RESET);
     flags &= ~(1U << FlagsIdxBtEnabled);
 }
 
 static inline void uac_enable()
 {
     // 初始化 USB 协议栈
-    usb_init(0, USB_OTG_FS_PERIPH_BASE);
+    usb_init(0, USB_OTG_HS_PERIPH_BASE);
     // 使能 USB 断开检测
     GPIO_InitTypeDef GPIO_InitStruct = {
         .Pin = VBUS_DETECT_Pin,
@@ -115,11 +110,6 @@ static void speaker_stop()
 
 static inline void disable_audio_io_exclue(AudioIoType_t exclude)
 {
-    if (exclude != AudioIoTypeAux)
-    {
-        aux_disable();
-    }
-
     if (exclude != AudioIoTypeBt)
     {
         bt_disable();
@@ -133,11 +123,6 @@ static inline void disable_audio_io_exclue(AudioIoType_t exclude)
 
 static inline void enable_all_audio_io()
 {
-    if (!(flags & (1U << FlagsIdxAuxEnabled)))
-    {
-        aux_enable();
-    }
-
     if (!(flags & (1U << FlagsIdxBtEnabled)))
     {
         bt_enable();
@@ -162,116 +147,11 @@ bool audio_io_is_connected()
 
 void audio_io_handler()
 {
-    // 处理连接事件
-    bool has_connect_event = false;
-    if (event_group_check_event(EventGroup1, EventGroup1AuxConnect, true))
-    {
-        printf("AUX connect event coming.\n");
-        if (audio_io_type != AudioIoTypeNone)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            disable_audio_io_exclue(AudioIoTypeAux);
-            audio_adc_start();
-            audio_dac_ctl(AudioDacCmdEnableCh2);
-            audio_processor_set_ifout_ch_num(1);
-            audio_io_type = AudioIoTypeAux;
-            has_connect_event = true;
-        }
-    }
-    if (event_group_check_event(EventGroup1, EventGroup1BtConnect, true))
-    {
-        printf("BT connect event coming.\n");
-        if (audio_io_type != AudioIoTypeNone)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            disable_audio_io_exclue(AudioIoTypeBt);
-            iis_start();
-            audio_processor_set_ifout_ch_num(1);
-            audio_io_type = AudioIoTypeBt;
-            has_connect_event = true;
-        }
-    }
-    if (event_group_check_event(EventGroup1, EventGroup1UsbConnect, true) && audio_io_type == AudioIoTypeNone)
-    {
-        printf("USB connect event coming.\n");
-        if (audio_io_type != AudioIoTypeNone)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            disable_audio_io_exclue(AudioIoTypeUac);
-            audio_processor_set_ifout_ch_num(2);
-            audio_io_type = AudioIoTypeUac;
-            has_connect_event = true;
-        }
-    }
-    if (has_connect_event == true)
-    {
-        speaker_start();
-        audio_dfsdm_start();
-        event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
-    }
+    // 检测硬件连接状态
+    hardware_link_detect();
 
-    // 处理断开事件
-    bool has_disconnect_event = false;
-    if (event_group_check_event(EventGroup1, EventGroup1UsbDisconnect, true))
-    {
-        printf("UAC disconnect event coming.\n");
-        if (audio_io_type != AudioIoTypeUac)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            // CherryUSB 不支持断开事件，
-            // 重新初始化协议栈避免协议栈内部重复触发挂起事件
-            usbd_deinitialize(0);
-            usb_init(0, USB_OTG_FS_PERIPH_BASE);
-            has_disconnect_event = true;
-        }
-    }
-    if (event_group_check_event(EventGroup1, EventGroup1BtDisconnect, true) && audio_io_type == AudioIoTypeBt)
-    {
-        printf("BT disconnect event coming.\n");
-        if (audio_io_type != AudioIoTypeBt)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            iis_stop();
-            has_disconnect_event = true;
-        }
-    }
-    if (event_group_check_event(EventGroup1, EventGroup1AuxDisconnect, true) && audio_io_type == AudioIoTypeAux)
-    {
-        printf("AUX disconnect event coming.\n");
-        if (audio_io_type != AudioIoTypeAux)
-        {
-            printf("Current audio io type is: %s, ignore.\n", AUDIO_IO_TYPE_NAME[audio_io_type]);
-        }
-        else
-        {
-            audio_adc_stop();
-            audio_dac_ctl(AudioDacCmdDisableCh2);
-            has_disconnect_event = true;
-        }
-    }
-    if (has_disconnect_event == true)
-    {
-        audio_io_type = AudioIoTypeNone;
-        audio_dfsdm_stop();
-        speaker_stop();
-        enable_all_audio_io();
-        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
-    }
+    // 切换软件链路
+    software_link_switch();
 
     int ret_int = 0;
 
@@ -367,5 +247,240 @@ void audio_io_handler()
     if (event_group_check_event(EventGroup1, EventGroup1DfsdmFilter1DmaError, true))
     {
         printf("DFSDM filter1 DMA error.\n");
+    }
+}
+
+static void hardware_link_detect()
+{
+    aux_detect();
+    bt_detect();
+    uac_detect();
+}
+
+static void aux_detect()
+{
+    const bool aux_detect_stat = READ_BIT(flags, 1U << FlagsIdxAuxDetected);
+    const bool current_aux_detect_stat = (HAL_GPIO_ReadPin(AUX1_DET_GPIO_Port, AUX1_DET_Pin) == GPIO_PIN_SET ||
+                                          HAL_GPIO_ReadPin(AUX2_DET_GPIO_Port, AUX2_DET_Pin) == GPIO_PIN_SET);
+    if (aux_detect_stat == current_aux_detect_stat)
+    {
+        aux_changed_detected = false;
+        return;
+    }
+
+    if (aux_changed_detected == false)
+    {
+        aux_changed_detected = true;
+        aux_change_detected_tick = HAL_GetTick();
+    }
+
+    if (HAL_GetTick() - aux_change_detected_tick < IO_STAT_CHANGE_TICK_THRESHOLD)
+    {
+        return;
+    }
+
+    if (current_aux_detect_stat)
+    {
+        printf("Hardware link detected: AUX\n");
+        SET_BIT(flags, 1U << FlagsIdxAuxDetected);
+    }
+    else
+    {
+        printf("Hardware link removed: AUX\n");
+        CLEAR_BIT(flags, 1U << FlagsIdxAuxDetected);
+    }
+}
+
+static void bt_detect()
+{
+    const bool bt_detect_stat = READ_BIT(flags, 1U << FlagsIdxBtDetected);
+    const bool current_bt_detect_stat = HAL_GPIO_ReadPin(BT_STAT_GPIO_Port, BT_STAT_Pin) == GPIO_PIN_SET;
+    if (bt_detect_stat == current_bt_detect_stat)
+    {
+        bt_changed_detected = false;
+        return;
+    }
+
+    if (bt_changed_detected == false)
+    {
+        bt_changed_detected = true;
+        bt_change_detected_tick = HAL_GetTick();
+    }
+
+    if (HAL_GetTick() - bt_change_detected_tick < IO_STAT_CHANGE_TICK_THRESHOLD)
+    {
+        return;
+    }
+
+    if (current_bt_detect_stat)
+    {
+        printf("Hardware link detected: BT\n");
+        SET_BIT(flags, 1U << FlagsIdxBtDetected);
+    }
+    else
+    {
+        printf("Hardware link removed: BT\n");
+        CLEAR_BIT(flags, 1U << FlagsIdxBtDetected);
+    }
+}
+
+static void uac_detect()
+{
+    const bool uac_detect_stat = READ_BIT(flags, 1U << FlagsIdxUacDetected);
+    const bool current_uac_detect_stat =
+        (HAL_GPIO_ReadPin(VBUS_DETECT_GPIO_Port, VBUS_DETECT_Pin) == GPIO_PIN_SET && usb_device_is_configured(0));
+    if (uac_detect_stat == current_uac_detect_stat)
+    {
+        return;
+    }
+
+    if (current_uac_detect_stat)
+    {
+        printf("Hardware link detected: UAC\n");
+        SET_BIT(flags, 1U << FlagsIdxUacDetected);
+    }
+    else
+    {
+        printf("Hardware link removed: UAC\n");
+        CLEAR_BIT(flags, 1U << FlagsIdxUacDetected);
+    }
+}
+
+static void software_link_switch()
+{
+    const bool uac_detected = READ_BIT(flags, 1U << FlagsIdxUacDetected);
+    const bool bt_detected = READ_BIT(flags, 1U << FlagsIdxBtDetected);
+    const bool aux_detected = READ_BIT(flags, 1U << FlagsIdxAuxDetected);
+
+    // 硬件链路已移除
+    if (uac_detected == false && bt_detected == false && aux_detected == false)
+    {
+        if (audio_io_type == AudioIoTypeNone)
+        {
+            return;
+        }
+        printf("All hardware are removed.\n");
+        if (audio_io_type == AudioIoTypeAux)
+        {
+            printf("Close software link: AUX\n");
+            audio_adc_stop();
+            audio_dac_ctl(AudioDacCmdDisableCh2);
+        }
+        else if (audio_io_type == AudioIoTypeBt)
+        {
+            printf("Close software link: BT\n");
+            iis_stop();
+        }
+        else if (audio_io_type == AudioIoTypeUac)
+        {
+            printf("Close software link: UAC\n");
+            // CherryUSB 不支持断开事件，
+            // 重新初始化协议栈避免协议栈内部重复触发挂起事件
+            usbd_deinitialize(0);
+            usb_init(0, USB_OTG_HS_PERIPH_BASE);
+        }
+        audio_io_type = AudioIoTypeNone;
+        audio_dfsdm_stop();
+        speaker_stop();
+        enable_all_audio_io();
+        event_group_set_event(EventGroup1, EventGroup1AudioIoDisconnected);
+        return;
+    }
+
+    if (uac_detected)
+    {
+        // 软件链路和硬件链路已对应
+        if (audio_io_type == AudioIoTypeUac)
+        {
+            return;
+        }
+
+        printf("New hardware link detected: UAC.\n");
+
+        // 关闭原软件链路
+        if (audio_io_type == AudioIoTypeAux)
+        {
+            printf("Disable current software link: AUX.\n");
+            audio_adc_stop();
+            audio_dac_ctl(AudioDacCmdDisableCh2);
+        }
+        else if (audio_io_type == AudioIoTypeBt)
+        {
+            printf("Disable current software link: BT.\n");
+            iis_stop();
+        }
+
+        // 启动新的软件链路
+        printf("Switch to new software link: UAC.\n");
+        audio_processor_set_ifout_ch_num(2);
+
+        // 通用步骤
+        if (audio_io_type == AudioIoTypeNone)
+        {
+            speaker_start();
+            audio_dfsdm_start();
+            event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
+        }
+        disable_audio_io_exclue(AudioIoTypeUac);
+        audio_io_type = AudioIoTypeUac;
+    }
+    else if (bt_detected)
+    {
+        // 软件链路和硬件链路已对应
+        if (audio_io_type == AudioIoTypeBt)
+        {
+            return;
+        }
+
+        printf("New hardware link detected: BT.\n");
+
+        // 关闭原软件链路
+        if (audio_io_type == AudioIoTypeAux)
+        {
+            printf("Disable current software link: AUX.\n");
+            audio_adc_stop();
+            audio_dac_ctl(AudioDacCmdDisableCh2);
+        }
+
+        // 启动新的软件链路
+        printf("Switch to new software link: BT.\n");
+        iis_start();
+        audio_processor_set_ifout_ch_num(1);
+
+        // 通用步骤
+        if (audio_io_type == AudioIoTypeNone)
+        {
+            speaker_start();
+            audio_dfsdm_start();
+            event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
+        }
+
+        disable_audio_io_exclue(AudioIoTypeBt);
+        audio_io_type = AudioIoTypeBt;
+    }
+    else if (aux_detected)
+    {
+        // 软件链路和硬件链路已对应
+        if (audio_io_type == AudioIoTypeAux)
+        {
+            return;
+        }
+
+        // 启动新的软件链路
+        printf("Switch to new software link: AUX.\n");
+        audio_adc_start();
+        audio_dac_ctl(AudioDacCmdEnableCh2);
+        audio_processor_set_ifout_ch_num(1);
+
+        // 通用步骤
+        if (audio_io_type == AudioIoTypeNone)
+        {
+            speaker_start();
+            audio_dfsdm_start();
+            event_group_set_event(EventGroup1, EventGroup1AudioIoConnected);
+        }
+
+        disable_audio_io_exclue(AudioIoTypeAux);
+        audio_io_type = AudioIoTypeAux;
     }
 }

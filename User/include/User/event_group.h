@@ -25,15 +25,6 @@ typedef enum
     EventGroup1UacDataIn,
     EventGroup1UacDataOut,
 
-    EventGroup1UsbConnect,
-    EventGroup1UsbDisconnect,
-
-    EventGroup1BtConnect,
-    EventGroup1BtDisconnect,
-
-    EventGroup1AuxConnect,
-    EventGroup1AuxDisconnect,
-
     EventGroup1AudioIoConnected,
     EventGroup1AudioIoDisconnected,
 

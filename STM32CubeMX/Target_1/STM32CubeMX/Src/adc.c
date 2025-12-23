@@ -44,8 +44,7 @@ void MX_ADC3_Init(void)
     /** Common config
      */
     hadc3.Instance = ADC3;
-    hadc3.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-    hadc3.Init.Resolution = ADC_RESOLUTION_16B;
+    hadc3.Init.Resolution = ADC_RESOLUTION_14B;
     hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
     hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
     hadc3.Init.LowPowerAutoWait = DISABLE;
@@ -57,8 +56,11 @@ void MX_ADC3_Init(void)
     hadc3.Init.ConversionDataManagement = ADC_CONVERSIONDATA_DMA_CIRCULAR;
     hadc3.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
     hadc3.Init.LeftBitShift = ADC_LEFTBITSHIFT_NONE;
-    hadc3.Init.OversamplingMode = DISABLE;
-    hadc3.Init.Oversampling.Ratio = 1;
+    hadc3.Init.OversamplingMode = ENABLE;
+    hadc3.Init.Oversampling.Ratio = 4;
+    hadc3.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_1;
+    hadc3.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+    hadc3.Init.Oversampling.OversamplingStopReset = ADC_REGOVERSAMPLING_CONTINUED_MODE;
     if (HAL_ADC_Init(&hadc3) != HAL_OK)
     {
         Error_Handler();
@@ -66,9 +68,9 @@ void MX_ADC3_Init(void)
 
     /** Configure Regular Channel
      */
-    sConfig.Channel = ADC_CHANNEL_11;
+    sConfig.Channel = ADC_CHANNEL_10;
     sConfig.Rank = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLETIME_32CYCLES_5;
+    sConfig.SamplingTime = ADC_SAMPLETIME_64CYCLES_5;
     sConfig.SingleDiff = ADC_SINGLE_ENDED;
     sConfig.OffsetNumber = ADC_OFFSET_1;
     sConfig.Offset = 32768;
@@ -79,6 +81,11 @@ void MX_ADC3_Init(void)
         Error_Handler();
     }
     /* USER CODE BEGIN ADC3_Init 2 */
+
+    if (HAL_ADCEx_Calibration_Start(&hadc3, ADC_CALIB_OFFSET, ADC_SINGLE_ENDED) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
     /* USER CODE END ADC3_Init 2 */
 }
@@ -97,9 +104,9 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef *adcHandle)
 
         __HAL_RCC_GPIOC_CLK_ENABLE();
         /**ADC3 GPIO Configuration
-        PC1     ------> ADC3_INP11
+        PC0     ------> ADC3_INP10
         */
-        GPIO_InitStruct.Pin = GPIO_PIN_1;
+        GPIO_InitStruct.Pin = GPIO_PIN_0;
         GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -140,9 +147,9 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef *adcHandle)
         __HAL_RCC_ADC3_CLK_DISABLE();
 
         /**ADC3 GPIO Configuration
-        PC1     ------> ADC3_INP11
+        PC0     ------> ADC3_INP10
         */
-        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1);
+        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0);
 
         /* ADC3 DMA DeInit */
         HAL_DMA_DeInit(adcHandle->DMA_Handle);

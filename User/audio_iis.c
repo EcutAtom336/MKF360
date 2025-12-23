@@ -16,6 +16,10 @@
 // | MONO sample 1    | MONO sample 2     | MONO sample 3    | MONO sample 4     | ... |
 // 实际音频采样率为 MKF360_AUDIO_SAMPLE_RATE_HZ，IIS 配置为音频采样率配置为 MKF360_AUDIO_SAMPLE_RATE_HZ/2
 
+// TODO：每30MS会有几个样本丢失（值为0），待查明原因
+// 可能是ESP32 IIS的问题，
+// 预计使用SPI替代IIS传输音频
+
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
     iis_tx_dma_buffer[2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t

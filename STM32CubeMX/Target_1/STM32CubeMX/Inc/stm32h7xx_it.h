@@ -56,14 +56,12 @@ extern "C"
     void DebugMon_Handler(void);
     void PendSV_Handler(void);
     void SysTick_Handler(void);
-    void EXTI0_IRQHandler(void);
     void DMA1_Stream0_IRQHandler(void);
     void DMA1_Stream1_IRQHandler(void);
     void DMA1_Stream2_IRQHandler(void);
     void DMA1_Stream3_IRQHandler(void);
     void DMA1_Stream4_IRQHandler(void);
     void DMA1_Stream5_IRQHandler(void);
-    void EXTI9_5_IRQHandler(void);
     void USART1_IRQHandler(void);
     void BDMA_Channel0_IRQHandler(void);
     /* USER CODE BEGIN EFP */

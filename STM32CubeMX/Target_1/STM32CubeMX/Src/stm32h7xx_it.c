@@ -219,20 +219,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /**
- * @brief This function handles EXTI line0 interrupt.
- */
-void EXTI0_IRQHandler(void)
-{
-    /* USER CODE BEGIN EXTI0_IRQn 0 */
-
-    /* USER CODE END EXTI0_IRQn 0 */
-    HAL_GPIO_EXTI_IRQHandler(HEADSET_DET_Pin);
-    /* USER CODE BEGIN EXTI0_IRQn 1 */
-
-    /* USER CODE END EXTI0_IRQn 1 */
-}
-
-/**
  * @brief This function handles DMA1 stream0 global interrupt.
  */
 void DMA1_Stream0_IRQHandler(void)
@@ -314,21 +300,6 @@ void DMA1_Stream5_IRQHandler(void)
     /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
 
     /* USER CODE END DMA1_Stream5_IRQn 1 */
-}
-
-/**
- * @brief This function handles EXTI line[9:5] interrupts.
- */
-void EXTI9_5_IRQHandler(void)
-{
-    /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
-    /* USER CODE END EXTI9_5_IRQn 0 */
-    HAL_GPIO_EXTI_IRQHandler(BT_STAT_Pin);
-    HAL_GPIO_EXTI_IRQHandler(VBUS_DETECT_Pin);
-    /* USER CODE BEGIN EXTI9_5_IRQn 1 */
-
-    /* USER CODE END EXTI9_5_IRQn 1 */
 }
 
 /**

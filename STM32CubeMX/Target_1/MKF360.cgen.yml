@@ -24,6 +24,7 @@ generator-import:
         - file: ./STM32CubeMX/Src/quadspi.c
         - file: ./STM32CubeMX/Src/tim.c
         - file: ./STM32CubeMX/Src/usart.c
+        - file: ./STM32CubeMX/Src/usb_otg.c
         - file: ./STM32CubeMX/Src/stm32h7xx_it.c
         - file: ./STM32CubeMX/Src/stm32h7xx_hal_msp.c
         - file: ./STM32CubeMX/MDK-ARM/startup_stm32h750xx.s
