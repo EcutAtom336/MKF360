@@ -164,8 +164,16 @@ void audio_io_handler()
         {
             interface_out_read(iis_get_tx_idle_buffer_address(),
                                MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
-            interface_in_write(iis_get_rx_idle_buffer_address(),
-                               MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+            int16_t *rx_buffer = iis_get_rx_idle_buffer_address();
+            // 修复 IIS 接收偶发的全 0 数据问题
+            for (size_t i = 0; i < MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS - 1; i++)
+            {
+                if (abs(rx_buffer[i] - rx_buffer[i + 1]) > 10 && rx_buffer[i + 1] == 0)
+                {
+                    rx_buffer[i + 1] = rx_buffer[i];
+                }
+            }
+            interface_in_write(rx_buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
         }
     }
     if (event_group_check_event(EventGroup1, EventGroup1Adc3DmaBufferReady, true))
