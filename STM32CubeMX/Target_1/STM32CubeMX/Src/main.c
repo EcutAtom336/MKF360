@@ -39,6 +39,7 @@
 #include "User/audio_buffer.h"
 #include "User/audio_io.h"
 #include "User/audio_processor.h"
+#include "User/battery_monitor.h"
 #include "User/event_group.h"
 #include "User/retarget.h"
 #include "audio/PCM_RES.h"
@@ -143,6 +144,7 @@ int main(void)
     MX_TIM6_Init();
     MX_TIM7_Init();
     MX_I2S3_Init();
+    MX_ADC2_Init();
     /* USER CODE BEGIN 2 */
 
     stdout_init();
@@ -180,10 +182,15 @@ int main(void)
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
         {
             stdout_maintain();
+            battery_monitor_handler();
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
+        }
+        if (event_group_check_event(EventGroup1, EventGroup1Tick5000Pass, true))
+        {
+            printf("Battery voltage: %.2fV\n", battery_monitor_get_voltage());
         }
     }
     /* USER CODE END 3 */
@@ -291,9 +298,9 @@ void PeriphCommonClock_Config(void)
 
 void period_event_tick()
 {
-    static size_t last_tick[] = {0U, 0U};
-    const size_t interval_tick[] = {50U, 500U};
-    const uint32_t event_bit[] = {EventGroup1Tick50Pass, EventGroup1Tick500Pass};
+    static size_t last_tick[] = {0U, 0U, 0U};
+    const size_t interval_tick[] = {50U, 500U, 5000U};
+    const uint32_t event_bit[] = {EventGroup1Tick50Pass, EventGroup1Tick500Pass, EventGroup1Tick5000Pass};
     size_t tick = HAL_GetTick();
     for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
     {

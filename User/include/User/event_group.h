@@ -33,6 +33,7 @@ typedef enum
 
     EventGroup1Tick50Pass,
     EventGroup1Tick500Pass,
+    EventGroup1Tick5000Pass,
 } EventGroupEventIndex_t;
 
 bool event_group_set_event(const EventGroupIndex_t group_idx, const uint8_t event_idx);
