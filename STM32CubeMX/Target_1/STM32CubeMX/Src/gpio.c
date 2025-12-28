@@ -76,14 +76,14 @@ void MX_GPIO_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /*Configure GPIO pin : AUX1_DET_Pin */
-    GPIO_InitStruct.Pin = AUX1_DET_Pin;
+    /*Configure GPIO pins : AUX1_DET_Pin AUX2_DET_Pin */
+    GPIO_InitStruct.Pin = AUX1_DET_Pin | AUX2_DET_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(AUX1_DET_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : AUX2_DET_Pin VBUS_DETECT_Pin BT_STAT_Pin */
-    GPIO_InitStruct.Pin = AUX2_DET_Pin | VBUS_DETECT_Pin | BT_STAT_Pin;
+    /*Configure GPIO pins : VBUS_DETECT_Pin BT_STAT_Pin */
+    GPIO_InitStruct.Pin = VBUS_DETECT_Pin | BT_STAT_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

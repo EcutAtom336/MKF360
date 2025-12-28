@@ -11,8 +11,6 @@
 #include "dfsdm.h"
 #include "main.h"
 
-// hw0.5 无时钟，可能是芯片问题，以后检查
-
 __attribute__((section(".bss.DMA_RAM_D2"))) static int16_t
     filter_dma_buffer[2][2][MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST];
 __attribute__((section(".bss.DTCM"))) static volatile uint8_t filter0_idle_buffer;

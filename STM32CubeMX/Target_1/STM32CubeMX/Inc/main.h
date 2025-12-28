@@ -70,8 +70,8 @@ extern "C"
 #define AUX_OUT_EN_GPIO_Port GPIOA
 #define AUX1_DET_Pin GPIO_PIN_4
 #define AUX1_DET_GPIO_Port GPIOC
-#define AUX2_DET_Pin GPIO_PIN_0
-#define AUX2_DET_GPIO_Port GPIOB
+#define AUX2_DET_Pin GPIO_PIN_5
+#define AUX2_DET_GPIO_Port GPIOC
 #define VBUS_DETECT_Pin GPIO_PIN_13
 #define VBUS_DETECT_GPIO_Port GPIOB
 #define STAT_LED_Pin GPIO_PIN_9

@@ -372,6 +372,7 @@ static void software_link_switch()
         {
             printf("Close software link: AUX\n");
             audio_adc_stop();
+            HAL_GPIO_WritePin(AUX_OUT_EN_GPIO_Port, AUX_OUT_EN_Pin, GPIO_PIN_RESET);
             audio_dac_ctl(AudioDacCmdDisableCh2);
         }
         else if (audio_io_type == AudioIoTypeBt)
@@ -478,6 +479,7 @@ static void software_link_switch()
         printf("Switch to new software link: AUX.\n");
         audio_adc_start();
         audio_dac_ctl(AudioDacCmdEnableCh2);
+        HAL_GPIO_WritePin(AUX_OUT_EN_GPIO_Port, AUX_OUT_EN_Pin, GPIO_PIN_SET);
         audio_processor_set_ifout_ch_num(1);
 
         // 通用步骤
