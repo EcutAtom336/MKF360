@@ -152,7 +152,7 @@ static void process_capture_audio()
     mic2_read(buffer1, PROCESS_FRAME_SAMPLES);
     mic1_read(buffer1, PROCESS_FRAME_SAMPLES);
 
-    arm_scale_q15(buffer1, 8, 15, buffer1, PROCESS_FRAME_SAMPLES);
+    arm_scale_q15(buffer1, 16, 15, buffer1, PROCESS_FRAME_SAMPLES);
 
     int16_t mean = 0;
     arm_mean_q15(buffer1, PROCESS_FRAME_SAMPLES, &mean);
@@ -176,11 +176,11 @@ static void process_capture_audio()
     {
         feedback_read(buffer2, PROCESS_FRAME_SAMPLES);
     }
-    arm_scale_q15(buffer2, 4, 15, buffer2, PROCESS_FRAME_SAMPLES);
 
     // SpeexDSP回声消除对样本非线性的影响及其敏感，
     // 回声消除前不应进行影响样本线性的处理
     speex_echo_cancellation(speex_echo_state, buffer1, buffer2, buffer3);
+    arm_scale_q15(buffer3, 2, 11, buffer3, PROCESS_FRAME_SAMPLES);
     speex_preprocess_run(speex_preprocess_state, buffer3);
 
     if (ifout_ch_num == 1)
@@ -194,7 +194,7 @@ static void process_capture_audio()
         for (size_t i = 0; i < PROCESS_FRAME_SAMPLES; i++)
         {
             buffer4[i * 2 + 0] = buffer3[i];
-            buffer4[i * 2 + 1] = buffer2[i];
+            buffer4[i * 2 + 1] = buffer1[i];
         }
 #else
 #pragma unroll PROCESS_FRAME_SAMPLES
