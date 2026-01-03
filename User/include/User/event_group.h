@@ -32,7 +32,9 @@ typedef enum
     // EventGroup1AudioIoDataOut,
 
     EventGroup1Tick50Pass,
+    EventGroup1Tick250Pass,
     EventGroup1Tick500Pass,
+    EventGroup1Tick1000Pass,
     EventGroup1Tick5000Pass,
 } EventGroupEventIndex_t;
 

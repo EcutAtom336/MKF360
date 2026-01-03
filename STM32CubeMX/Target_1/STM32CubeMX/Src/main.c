@@ -184,9 +184,23 @@ int main(void)
             stdout_maintain();
             battery_monitor_handler();
         }
+        if (event_group_check_event(EventGroup1, EventGroup1Tick250Pass, true))
+        {
+            if (audio_io_is_connected() == false)
+            {
+                HAL_GPIO_TogglePin(STAT_LED_GPIO_Port, STAT_LED_Pin);
+            }
+        }
         if (event_group_check_event(EventGroup1, EventGroup1Tick500Pass, true))
         {
             HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
+        }
+        if (event_group_check_event(EventGroup1, EventGroup1Tick1000Pass, true))
+        {
+            if (audio_io_is_connected() == true)
+            {
+                HAL_GPIO_TogglePin(STAT_LED_GPIO_Port, STAT_LED_Pin);
+            }
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick5000Pass, true))
         {
@@ -298,9 +312,10 @@ void PeriphCommonClock_Config(void)
 
 void period_event_tick()
 {
-    static size_t last_tick[] = {0U, 0U, 0U};
-    const size_t interval_tick[] = {50U, 500U, 5000U};
-    const uint32_t event_bit[] = {EventGroup1Tick50Pass, EventGroup1Tick500Pass, EventGroup1Tick5000Pass};
+    static size_t last_tick[5] = {0U};
+    const size_t interval_tick[] = {50U, 250U, 500U, 1000U, 5000U};
+    const uint32_t event_bit[] = {EventGroup1Tick50Pass, EventGroup1Tick250Pass, EventGroup1Tick500Pass,
+                                  EventGroup1Tick1000Pass, EventGroup1Tick5000Pass};
     size_t tick = HAL_GetTick();
     for (size_t i = 0; i < sizeof(last_tick) / sizeof(last_tick[0]); i++)
     {
