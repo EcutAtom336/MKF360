@@ -147,6 +147,9 @@ int main(void)
     MX_ADC2_Init();
     /* USER CODE BEGIN 2 */
 
+    HAL_Delay(1000);
+    HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_SET);
+
     stdout_init();
     audio_io_init();
     audio_processor_init();
@@ -155,6 +158,8 @@ int main(void)
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
+    uint32_t btn_low_continue_tick = 0;
 
     while (1)
     {
@@ -183,6 +188,19 @@ int main(void)
         {
             stdout_maintain();
             battery_monitor_handler();
+            if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET)
+            {
+                btn_low_continue_tick += 50;
+                if (btn_low_continue_tick >= 3000)
+                {
+                    HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_RESET);
+                    HAL_PWR_EnterSTANDBYMode();
+                }
+            }
+            else
+            {
+                btn_low_continue_tick = 0;
+            }
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick250Pass, true))
         {
