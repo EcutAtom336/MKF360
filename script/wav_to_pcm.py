@@ -9,7 +9,7 @@ def check_wav_format(wav_path):
             return (
                 wav.getnchannels() == 1
                 and wav.getsampwidth() == 2
-                and wav.getframerate() == 16000
+                and wav.getframerate() == 48000
             )
     except:
         return False
@@ -18,12 +18,13 @@ def check_wav_format(wav_path):
 def process_wav_files():
     # 配置参数
     wav_dir = "./audio"
-    pcm_dir = "./audio/src"
+    src_dir = "./audio/src"
     include_dir = "./audio/include/audio"
     header_file = os.path.join(include_dir, "PCM_RES.h")
+    source_file = os.path.join(src_dir, "PCM_RES.c")
 
     # 创建目录
-    os.makedirs(pcm_dir, exist_ok=True)
+    os.makedirs(src_dir, exist_ok=True)
     os.makedirs(include_dir, exist_ok=True)
 
     # 获取WAV文件列表
@@ -46,7 +47,7 @@ def process_wav_files():
         wav_path = os.path.join(wav_dir, wav_file)
 
         if not check_wav_format(wav_path):
-            print(f"Skipping {wav_file}: Not 16bit 16kHz mono format")
+            print(f"Skipping {wav_file}: Not 16bit 48kHz mono format")
             continue
 
         # 读取PCM数据
@@ -58,7 +59,7 @@ def process_wav_files():
         base_name = os.path.splitext(wav_file)[0].upper()
         var_name = f"{base_name}_PCM"
         c_file_name = f"{var_name}.c"
-        c_file_path = os.path.join(pcm_dir, c_file_name)
+        c_file_path = os.path.join(src_dir, c_file_name)
 
         # 写入C文件
         if os.path.exists(c_file_path):
@@ -103,8 +104,36 @@ def process_wav_files():
             f.write(
                 f'extern const int16_t {info["var_name"]}[{info["var_name"]}_LEN];\n'
             )
+        f.write("\n")
+
+        # 写入引用数组声明
+        f.write("extern const int16_t *PCM_RES[];\n")
+
+        # 写入长度数组声明
+        f.write("extern const uint32_t PCM_RES_LEN[];\n")
 
         f.write("\n#endif // __PCM_RES_H__\n")
+
+    # 生成源文件
+    if os.path.exists(source_file):
+        print(f"Overwriting {source_file}")
+
+    with open(source_file, "w", encoding="utf-8") as f:
+        f.write('#include "audio/PCM_RES.h"\n\n#include <stdint.h>\n\n')
+
+        # 写入引用数组
+        f.write(f"const int16_t *PCM_RES[] = {{\n")
+        for info in pcm_data_info:
+            var_name = info["var_name"]
+            f.write(f"{var_name},\n")
+        f.write(f"}};\n\n")
+
+        # 写入长度数组
+        f.write(f"const uint32_t PCM_RES_LEN[] = {{\n")
+        for info in pcm_data_info:
+            var_name = info["var_name"]
+            f.write(f"{var_name}_LEN,\n")
+        f.write(f"}};\n")
 
     print(f"Processed {len(pcm_data_info)} WAV files")
 

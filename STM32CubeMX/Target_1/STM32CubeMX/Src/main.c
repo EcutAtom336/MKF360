@@ -160,6 +160,7 @@ int main(void)
     /* USER CODE BEGIN WHILE */
 
     uint32_t btn_low_continue_tick = 0;
+    bool low_battery_triggered = false;
 
     while (1)
     {
@@ -182,6 +183,7 @@ int main(void)
         {
             audio_processor_reset();
             reset_audio_rb();
+            low_battery_triggered = false;
             printf("Audio IO disconnected.\n");
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
@@ -222,7 +224,13 @@ int main(void)
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick5000Pass, true))
         {
-            printf("Battery voltage: %.2fV\n", battery_monitor_get_voltage());
+            float_t bat_voltage = battery_monitor_get_voltage();
+            printf("Battery voltage: %.2fV\n", bat_voltage);
+            if (bat_voltage < 3.3F && audio_io_is_connected() && low_battery_triggered == false)
+            {
+                low_battery_triggered = true;
+                audio_io_play_prompt(BATTERY_LOW_PCM_IDX);
+            }
         }
     }
     /* USER CODE END 3 */

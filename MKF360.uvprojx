@@ -796,19 +796,19 @@
               <FilePath>.\audio\src\BATTERY_LOW_PCM.c</FilePath>
             </File>
             <File>
-              <FileName>BLUETOOTH_CONNECT_PCM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\audio\src\BLUETOOTH_CONNECT_PCM.c</FilePath>
-            </File>
-            <File>
-              <FileName>BLUETOOTH_DISCONNECT_PCM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\audio\src\BLUETOOTH_DISCONNECT_PCM.c</FilePath>
-            </File>
-            <File>
               <FileName>BOOT_PCM.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\audio\src\BOOT_PCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>CONNECTED_PCM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\CONNECTED_PCM.c</FilePath>
+            </File>
+            <File>
+              <FileName>PCM_RES.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\audio\src\PCM_RES.c</FilePath>
             </File>
           </Files>
         </Group>

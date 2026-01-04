@@ -13,6 +13,7 @@
 #include "User/event_group.h"
 #include "User/share_buffer.h"
 #include "User/usb_desc.h"
+#include "audio/PCM_RES.h"
 #include "main.h"
 #include "usbd_core.h"
 
@@ -48,6 +49,9 @@ __attribute__((section(".bss.DTCM"))) static uint32_t aux_change_detected_tick;
 __attribute__((section(".bss.DTCM"))) static uint32_t bt_change_detected_tick;
 
 __attribute__((section(".bss.DTCM"))) static AudioIoType_t audio_io_type = AudioIoTypeNone;
+
+__attribute__((section(".data.DTCM"))) uint8_t pending_prompt_idx = NONE_PCM_IDX;
+__attribute__((section(".bss.DTCM"))) uint32_t pending_prompt_played_samples;
 
 static inline void bt_enable();
 static inline void bt_disable();
@@ -192,10 +196,19 @@ void audio_io_handler()
             memset(buffer, 0,
                    MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS * MKF360_AUDIO_SAMPLE_SIZE);
         }
-        else
+        if (pending_prompt_idx != NONE_PCM_IDX)
         {
-            audio_dac_write_ch(buffer, DacCh1);
+            const uint32_t play_prompt_samples = MIN(PCM_RES_LEN[pending_prompt_idx] - pending_prompt_played_samples,
+                                                     MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
+            my_memcpy(buffer, &PCM_RES[pending_prompt_idx][pending_prompt_played_samples], play_prompt_samples * 2);
+            pending_prompt_played_samples += play_prompt_samples;
+            if (pending_prompt_played_samples == PCM_RES_LEN[pending_prompt_idx])
+            {
+                pending_prompt_idx = NONE_PCM_IDX;
+                printf("Play prompt finished.\n");
+            }
         }
+        audio_dac_write_ch(buffer, DacCh1);
         feedback_write(buffer, MKF360_AUDIO_PERIPH_DMA_MS_PER_DEST * MKF360_AUDIO_SAMPLE_NUM_1MS);
     }
     if (event_group_check_event(EventGroup1, EventGroup1DacCh2DmaBufferReady, false))
@@ -256,6 +269,22 @@ void audio_io_handler()
     {
         printf("DFSDM filter1 DMA error.\n");
     }
+}
+
+void audio_io_play_prompt(const uint8_t prompt_idx)
+{
+    if (prompt_idx >= NONE_PCM_IDX)
+    {
+        printf("Unknow prompt index, ignore.\n");
+        return;
+    }
+    if (pending_prompt_idx != NONE_PCM_IDX)
+    {
+        printf("There are pending play task, play fail.\n");
+        return;
+    }
+    pending_prompt_idx = prompt_idx;
+    pending_prompt_played_samples = 0;
 }
 
 static void hardware_link_detect()
