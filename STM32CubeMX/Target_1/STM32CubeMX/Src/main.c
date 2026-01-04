@@ -57,6 +57,10 @@
 // 单位：毫秒
 #define LONG_PRESS_SHUTDOWN_MS (3000U)
 
+// 无连接待机超时
+// 单位：秒
+#define STAND_BY_TIMEOUT_TICK (30U * 1000U)
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -169,6 +173,7 @@ int main(void)
 
     uint32_t btn_low_continue_tick = 0;
     bool low_battery_triggered = false;
+    uint32_t disconnect_tick = HAL_GetTick();
 
     while (1)
     {
@@ -192,6 +197,7 @@ int main(void)
             audio_processor_reset();
             reset_audio_rb();
             low_battery_triggered = false;
+            disconnect_tick = HAL_GetTick();
             printf("Audio IO disconnected.\n");
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick50Pass, true))
@@ -228,6 +234,11 @@ int main(void)
             if (audio_io_is_connected() == true)
             {
                 HAL_GPIO_TogglePin(STAT_LED_GPIO_Port, STAT_LED_Pin);
+            }
+            if (audio_io_is_connected() == false && HAL_GetTick() - disconnect_tick >= STAND_BY_TIMEOUT_TICK)
+            {
+                HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_RESET);
+                HAL_PWR_EnterSTANDBYMode();
             }
         }
         if (event_group_check_event(EventGroup1, EventGroup1Tick5000Pass, true))
