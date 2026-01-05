@@ -17,7 +17,7 @@ typedef enum
     BatteryLevelVeryLow,
     BatteryLevelLow,
     BatteryLevelMiddle,
-    BatteryLevelHeigh,
+    BatteryLevelHigh,
     BatteryLevelNone,
 } BatteryLevel;
 
@@ -25,7 +25,7 @@ static const char *BATTERY_LEVEL_NAMES[] = {
     [BatteryLevelVeryLow] = "Very low",
     [BatteryLevelLow] = "Low",
     [BatteryLevelMiddle] = "Middle",
-    [BatteryLevelHeigh] = "High",
+    [BatteryLevelHigh] = "High",
 };
 
 __attribute__((section(".DTCM"))) static bool adc2_started;
@@ -97,7 +97,7 @@ static void renew_level()
     BatteryLevel current_level = BatteryLevelVeryLow;
     if (battery_voltage >= BATTERY_LEVEL_HIGH_VOLTAGE_THRESHOLD)
     {
-        current_level = BatteryLevelHeigh;
+        current_level = BatteryLevelHigh;
     }
     else if (battery_voltage >= BATTERY_LEVEL_MIDDLE_VOLTAGE_THRESHOLD)
     {
@@ -125,7 +125,7 @@ static void renew_level()
 static void renew_indicator()
 {
 
-    if (level_report == BatteryLevelHeigh)
+    if (level_report == BatteryLevelHigh)
     {
         HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
