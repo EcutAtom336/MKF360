@@ -50,15 +50,12 @@
 /* USER CODE BEGIN PTD */
 
 // 长按开机时间阈值
-// 单位：毫秒
-#define LONG_PRESS_STARTUP_MS (1000U)
+#define LONG_PRESS_STARTUP_TICK (1U * 1000U)
 
 // 长按关机时间阈值
-// 单位：毫秒
-#define LONG_PRESS_SHUTDOWN_MS (3000U)
+#define LONG_PRESS_SHUTDOWN_TICK (3U * 1000U)
 
 // 无连接待机超时
-// 单位：秒
 #define STAND_BY_TIMEOUT_TICK (30U * 1000U)
 
 /* USER CODE END PTD */
@@ -159,7 +156,7 @@ int main(void)
     MX_ADC2_Init();
     /* USER CODE BEGIN 2 */
 
-    HAL_Delay(LONG_PRESS_STARTUP_MS);
+    HAL_Delay(LONG_PRESS_STARTUP_TICK);
     HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_SET);
 
     stdout_init();
@@ -207,7 +204,7 @@ int main(void)
             if (HAL_GPIO_ReadPin(BTN_GPIO_Port, BTN_Pin) == GPIO_PIN_RESET)
             {
                 btn_low_continue_tick += 50;
-                if (btn_low_continue_tick >= LONG_PRESS_SHUTDOWN_MS)
+                if (btn_low_continue_tick >= LONG_PRESS_SHUTDOWN_TICK)
                 {
                     HAL_GPIO_WritePin(PWR_EN_GPIO_Port, PWR_EN_Pin, GPIO_PIN_RESET);
                     HAL_PWR_EnterSTANDBYMode();
