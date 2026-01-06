@@ -14,7 +14,7 @@
 #include "audio/PCM_RES.h"
 #include "main.h"
 
-#define AUDIO_PROCESS_DEBUG (1)
+#define AUDIO_PROCESS_DEBUG (0)
 #define PROCESS_FRAME_SAMPLES (512U)
 #define FEEDBACK_DELAY_SAMPLES (1922U)
 
