@@ -180,7 +180,6 @@ static void process_capture_audio()
     // SpeexDSP回声消除对样本非线性的影响及其敏感，
     // 回声消除前不应进行影响样本线性的处理
     speex_echo_cancellation(speex_echo_state, buffer1, buffer2, buffer3);
-    arm_scale_q15(buffer3, 2, 11, buffer3, PROCESS_FRAME_SAMPLES);
     speex_preprocess_run(speex_preprocess_state, buffer3);
 
     if (ifout_ch_num == 1)
